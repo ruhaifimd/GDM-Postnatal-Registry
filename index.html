@@ -424,7 +424,7 @@ tr:hover td { background: var(--g50); }
     <div class="auth-body" id="auth-login-panel">
       <div class="auth-role-tabs">
         <div class="auth-role-btn active" id="rb-super" onclick="selectRole('super')">
-          <span class="role-icon">🛡️</span>Super Admin
+          <span class="role-icon">🛡️</span>Admin
         </div>
         <div class="auth-role-btn" id="rb-pic" onclick="selectRole('pic')">
           <span class="role-icon">🏥</span>PIC Klinik
@@ -432,14 +432,14 @@ tr:hover td { background: var(--g50); }
       </div>
       <div class="auth-error" id="auth-error"></div>
       <div class="form-group">
-        <label class="form-label">E-mel</label>
-        <input class="form-control" id="auth-email" type="email" placeholder="contoh@moh.gov.my" autocomplete="email">
+        <label class="form-label">E-mel Organisasi</label>
+        <input class="form-control" id="auth-email" type="email" placeholder="nama@moh.gov.my" autocomplete="email">
       </div>
       <div class="form-group">
         <label class="form-label">Kata Laluan</label>
         <div style="position:relative">
           <input class="form-control" id="auth-pass" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:42px">
-          <button onclick="togglePw('auth-pass','eye-login')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--g400);font-size:16px" id="eye-login">👁</button>
+          <button type="button" onclick="togglePw('auth-pass','eye-login')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--g400);font-size:16px" id="eye-login">👁</button>
         </div>
       </div>
       <button class="auth-btn" id="login-btn" onclick="doLogin()">
@@ -453,27 +453,51 @@ tr:hover td { background: var(--g50); }
     <!-- ── SIGN UP ── -->
     <div class="auth-body" id="auth-signup-panel" style="display:none">
       <div class="auth-signup-notice">
-        <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:4px">📋 Pendaftaran Akaun Baru</div>
-        <div style="font-size:12px;color:var(--g600);line-height:1.5">Pendaftaran terbuka untuk <b>Super Admin</b> sahaja. Akaun PIC Klinik didaftarkan oleh Super Admin melalui panel Admin.</div>
+        <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:4px">📋 Pendaftaran Akaun Baharu</div>
+        <div style="font-size:11px;color:var(--g600);line-height:1.5">Hanya kakitangan dengan e-mel <b style="color:var(--green)">@moh.gov.my</b> dibenarkan mendaftar. Akaun PIC Klinik perlu pengesahan Admin sebelum aktif.</div>
       </div>
+
+      <!-- Role selector for signup -->
+      <div class="auth-role-tabs" style="margin-bottom:16px">
+        <div class="auth-role-btn active" id="su-rb-super" onclick="selectSuRole('super')">
+          <span class="role-icon">🛡️</span>Admin
+        </div>
+        <div class="auth-role-btn" id="su-rb-pic" onclick="selectSuRole('pic')">
+          <span class="role-icon">🏥</span>PIC Klinik
+        </div>
+      </div>
+
       <div class="auth-error" id="signup-error"></div>
+
       <div class="form-group">
         <label class="form-label">Nama Penuh *</label>
-        <input class="form-control" id="su-nama" placeholder="Nama penuh anda">
+        <input class="form-control" id="su-nama" placeholder="Nama penuh seperti dalam kad pengenalan">
       </div>
       <div class="form-group">
-        <label class="form-label">E-mel *</label>
-        <input class="form-control" id="su-email" type="email" placeholder="contoh@moh.gov.my">
+        <label class="form-label">E-mel Organisasi * <span style="color:var(--green);font-weight:600;font-size:10px;margin-left:4px">@moh.gov.my sahaja</span></label>
+        <input class="form-control" id="su-email" type="email" placeholder="nama@moh.gov.my" autocomplete="email">
       </div>
-      <div class="form-group">
-        <label class="form-label">No. Telefon</label>
-        <input class="form-control" id="su-tel" placeholder="01X-XXXXXXX">
+      <div class="form-group" id="su-pic-clinic-wrap" style="display:none">
+        <label class="form-label">Klinik (PIC) *</label>
+        <select class="form-control" id="su-klinik">
+          <option value="">— Pilih klinik anda —</option>
+        </select>
+      </div>
+      <div class="form-row fr-2">
+        <div class="form-group">
+          <label class="form-label">Jawatan</label>
+          <input class="form-control" id="su-jawatan" placeholder="cth: MO / Jururawat">
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. Telefon</label>
+          <input class="form-control" id="su-tel" placeholder="01X-XXXXXXX">
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">Kata Laluan * <span style="color:var(--g400);font-weight:400;font-size:10px">(Min. 6 aksara)</span></label>
         <div style="position:relative">
           <input class="form-control" id="su-pass" type="password" placeholder="Cipta kata laluan" style="padding-right:42px" oninput="checkPwStrength()">
-          <button onclick="togglePw('su-pass','eye-su')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--g400);font-size:16px" id="eye-su">👁</button>
+          <button type="button" onclick="togglePw('su-pass','eye-su')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--g400);font-size:16px" id="eye-su">👁</button>
         </div>
         <div id="pw-strength-bar" style="margin-top:6px;height:4px;border-radius:99px;background:var(--g200);overflow:hidden;display:none">
           <div id="pw-strength-fill" style="height:100%;border-radius:99px;transition:width .3s,background .3s;width:0%"></div>
@@ -484,17 +508,20 @@ tr:hover td { background: var(--g50); }
         <label class="form-label">Sahkan Kata Laluan *</label>
         <input class="form-control" id="su-pass2" type="password" placeholder="Ulang kata laluan">
       </div>
-      <div class="form-group">
+
+      <!-- Invite code only for Admin role -->
+      <div class="form-group" id="su-code-wrap">
         <label class="form-label">Kod Jemputan Admin *
           <span style="color:var(--g400);font-weight:400;font-size:10px;margin-left:4px">Hubungi PKD Tumpat untuk kod</span>
         </label>
         <input class="form-control" id="su-code" placeholder="Masukkan kod jemputan" autocomplete="off">
       </div>
+
       <button class="auth-btn" id="signup-btn" onclick="doSignUp()">
-        <span id="signup-btn-text">Daftar Akaun Super Admin</span>
+        <span id="signup-btn-text">Daftar Akaun Admin</span>
       </button>
       <div style="margin-top:10px;text-align:center">
-        <button onclick="switchAuthMode('login')" style="background:none;border:none;color:var(--teal);font-size:12px;font-weight:600;cursor:pointer">← Kembali ke Log Masuk</button>
+        <button type="button" onclick="switchAuthMode('login')" style="background:none;border:none;color:var(--teal);font-size:12px;font-weight:600;cursor:pointer">← Kembali ke Log Masuk</button>
       </div>
     </div>
   </div>
@@ -625,7 +652,7 @@ tr:hover td { background: var(--g50); }
   </div>
 
   <!-- ─────────────────────────────────────────────
-       PAGE: ADMIN (Super Admin sahaja)
+       PAGE: ADMIN (Admin sahaja)
   ───────────────────────────────────────────── -->
   <div class="page super-only" id="page-admin">
     <!-- Tabs within admin -->
@@ -918,7 +945,7 @@ window.selectRole = r => {
   document.getElementById('rb-pic').classList.toggle('active', r === 'pic');
 };
 
-window.switchAuthMode = mode => {
+window.switchAuthMode = async mode => {
   const isLogin = mode === 'login';
   document.getElementById('auth-login-panel').style.display  = isLogin ? '' : 'none';
   document.getElementById('auth-signup-panel').style.display = isLogin ? 'none' : '';
@@ -926,6 +953,16 @@ window.switchAuthMode = mode => {
   document.getElementById('amode-signup').classList.toggle('active', !isLogin);
   hideErr();
   document.getElementById('signup-error').classList.remove('show');
+
+  // When switching to signup, load clinics for PIC dropdown
+  if (!isLogin) {
+    try {
+      const snap = await get(ref(db, 'klinik'));
+      clinics = snap.val() || {};
+      // If user is in PIC mode, refresh dropdown
+      if (signupRole === 'pic') selectSuRole('pic');
+    } catch(e) { /* fail silently — only matters for PIC */ }
+  }
 };
 
 window.togglePw = (inputId, btnId) => {
@@ -960,67 +997,139 @@ window.checkPwStrength = () => {
   lbl.textContent = lv.txt; lbl.style.color = lv.color;
 };
 
-// Invite code stored in Firebase at /config/inviteCode — Super Admin boleh tukar
+// Invite code stored in Firebase at /config/inviteCode — Admin boleh tukar
 const FALLBACK_INVITE = 'PKDTUMPAT2025';
+const ALLOWED_DOMAIN  = 'moh.gov.my';
+let signupRole = 'super';   // 'super' (Admin) | 'pic'
+
+window.selectSuRole = role => {
+  signupRole = role;
+  document.getElementById('su-rb-super').classList.toggle('active', role === 'super');
+  document.getElementById('su-rb-pic').classList.toggle('active',   role === 'pic');
+
+  // Toggle PIC clinic field
+  document.getElementById('su-pic-clinic-wrap').style.display = role === 'pic' ? '' : 'none';
+  // Toggle invite code (Admin only)
+  document.getElementById('su-code-wrap').style.display = role === 'super' ? '' : 'none';
+  // Update button label
+  document.getElementById('signup-btn-text').textContent =
+    role === 'super' ? 'Daftar Akaun Admin' : 'Hantar Permohonan PIC';
+
+  // Populate clinic dropdown when switching to PIC
+  if (role === 'pic') {
+    const sel = document.getElementById('su-klinik');
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">— Pilih klinik anda —</option>';
+    Object.entries(clinics).forEach(([id,c]) => {
+      sel.innerHTML += `<option value="${id}">${c.nama}</option>`;
+    });
+    sel.value = prev;
+  }
+};
+
+// Validate organisational email domain
+function isValidOrgEmail(email) {
+  if (!email || !email.includes('@')) return false;
+  const domain = email.split('@')[1].toLowerCase().trim();
+  return domain === ALLOWED_DOMAIN;
+}
 
 window.doSignUp = async () => {
-  const showSuErr = msg => {
-    const el = document.getElementById('signup-error');
-    el.textContent = msg; el.classList.add('show');
-  };
-  document.getElementById('signup-error').classList.remove('show');
+  const errEl = document.getElementById('signup-error');
+  const showSuErr = msg => { errEl.textContent = msg; errEl.classList.add('show'); errEl.scrollIntoView({behavior:'smooth',block:'center'}); };
+  errEl.classList.remove('show');
 
+  const role  = signupRole;
   const nama  = document.getElementById('su-nama').value.trim();
-  const email = document.getElementById('su-email').value.trim();
+  const email = document.getElementById('su-email').value.trim().toLowerCase();
   const tel   = document.getElementById('su-tel').value.trim();
+  const jawatan = document.getElementById('su-jawatan').value.trim();
   const pass  = document.getElementById('su-pass').value;
   const pass2 = document.getElementById('su-pass2').value;
   const code  = document.getElementById('su-code').value.trim();
+  const klinikId = document.getElementById('su-klinik').value;
 
-  if (!nama)  { showSuErr('Nama penuh wajib diisi.'); return; }
-  if (!email) { showSuErr('E-mel wajib diisi.'); return; }
-  if (pass.length < 6) { showSuErr('Kata laluan minimum 6 aksara.'); return; }
-  if (pass !== pass2)  { showSuErr('Kata laluan tidak sepadan. Sila semak semula.'); return; }
-  if (!code)  { showSuErr('Kod jemputan wajib diisi.'); return; }
+  // Common validations
+  if (!nama)  { showSuErr('Sila isi nama penuh.'); return; }
+  if (!email) { showSuErr('Sila isi e-mel organisasi.'); return; }
+  if (!isValidOrgEmail(email)) {
+    showSuErr(`E-mel mesti menggunakan domain organisasi @${ALLOWED_DOMAIN}. Pendaftaran ditolak.`);
+    return;
+  }
+  if (!pass || pass.length < 6) { showSuErr('Kata laluan minimum 6 aksara.'); return; }
+  if (pass !== pass2) { showSuErr('Kata laluan tidak sepadan. Sila semak semula.'); return; }
+
+  // Role-specific validations
+  if (role === 'super') {
+    if (!code) { showSuErr('Kod jemputan Admin wajib diisi.'); return; }
+  } else { // PIC
+    if (!klinikId) { showSuErr('Sila pilih klinik anda.'); return; }
+  }
 
   const btn = document.getElementById('signup-btn');
+  const btnTxt = document.getElementById('signup-btn-text');
+  const originalLabel = role === 'super' ? 'Daftar Akaun Admin' : 'Hantar Permohonan PIC';
   btn.disabled = true;
-  document.getElementById('signup-btn-text').textContent = 'Mendaftar…';
+  btnTxt.textContent = 'Memproses…';
 
   try {
-    // Validate invite code from Firebase (or fallback)
-    const codeSnap = await get(ref(db, 'config/inviteCode'));
-    const validCode = codeSnap.val() || FALLBACK_INVITE;
-    if (code.toUpperCase() !== validCode.toUpperCase()) {
-      showSuErr('Kod jemputan tidak sah. Sila hubungi PKD Tumpat.');
-      return;
+    // Admin: validate invite code
+    if (role === 'super') {
+      const codeSnap = await get(ref(db, 'config/inviteCode'));
+      const validCode = codeSnap.val() || FALLBACK_INVITE;
+      if (code.toUpperCase() !== validCode.toUpperCase()) {
+        showSuErr('Kod jemputan tidak sah. Sila hubungi PKD Tumpat.');
+        return;
+      }
     }
 
     // Create Firebase Auth user
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     const uid  = cred.user.uid;
 
-    // Save to /users
-    await set(ref(db, `users/${uid}`), {
-      nama, email, tel,
-      role: 'super',
-      aktif: true,
+    // Build user profile based on role
+    const userData = {
+      nama, email, tel, jawatan,
+      role,
+      aktif: role === 'super' ? true : false,  // PIC requires Admin approval
       tarikhDaftar: today(),
-    });
+    };
+    if (role === 'pic') userData.klinikId = klinikId;
 
-    toast('✅ Akaun Super Admin berjaya didaftarkan! Sila log masuk.');
-    // Sign out immediately — force explicit login
+    await set(ref(db, `users/${uid}`), userData);
+
+    // Force log out so user must explicitly log in
     await signOut(auth);
+
+    // Reset form fields
+    ['su-nama','su-email','su-tel','su-jawatan','su-pass','su-pass2','su-code'].forEach(i => {
+      const el = document.getElementById(i); if (el) el.value = '';
+    });
+    document.getElementById('pw-strength-bar').style.display = 'none';
+    document.getElementById('pw-strength-lbl').textContent = '';
+
+    if (role === 'super') {
+      toast('✅ Akaun Admin berjaya didaftarkan! Sila log masuk.', 3500);
+    } else {
+      toast('✅ Permohonan dihantar! Akaun anda akan diaktifkan oleh Admin.', 4000);
+    }
+
+    // Switch to login & prefill email
     switchAuthMode('login');
     document.getElementById('auth-email').value = email;
+    selectRole(role);
+
   } catch(e) {
-    if (e.code === 'auth/email-already-in-use') showSuErr('E-mel ini sudah didaftarkan.');
+    if (e.code === 'auth/email-already-in-use') showSuErr('E-mel ini sudah didaftarkan dalam sistem.');
     else if (e.code === 'auth/invalid-email')   showSuErr('Format e-mel tidak sah.');
-    else showSuErr('Ralat: ' + e.message);
+    else if (e.code === 'auth/weak-password')   showSuErr('Kata laluan terlalu lemah.');
+    else if (e.code === 'auth/network-request-failed') showSuErr('Sambungan Internet bermasalah. Cuba lagi.');
+    else showSuErr('Ralat pendaftaran: ' + (e.message || 'Tidak diketahui'));
   } finally {
     btn.disabled = false;
-    document.getElementById('signup-btn-text').textContent = 'Daftar Akaun Super Admin';
+    btnTxt.textContent = originalLabel;
   }
+
 };
 
 window.doLogin = async () => {
@@ -1039,7 +1148,12 @@ window.doLogin = async () => {
     if (!udata) { await signOut(auth); showErr('Akaun tidak didaftarkan dalam sistem.'); return; }
     if (udata.role !== selectedRole) {
       await signOut(auth);
-      showErr(`Anda tidak mempunyai akses sebagai "${selectedRole === 'super' ? 'Super Admin' : 'PIC Klinik'}".`);
+      showErr(`Anda tidak mempunyai akses sebagai "${selectedRole === 'super' ? 'Admin' : 'PIC Klinik'}".`);
+      return;
+    }
+    if (udata.aktif === false) {
+      await signOut(auth);
+      showErr('Akaun anda belum diaktifkan. Sila tunggu pengesahan dari Admin.');
       return;
     }
     // Success — onAuthStateChanged will handle the rest
@@ -1076,7 +1190,7 @@ function bootApp() {
   // Role UI
   const isSuper = currentUser.role === 'super';
   document.getElementById('role-pill').innerHTML = isSuper
-    ? '<span>🛡️</span> Super Admin'
+    ? '<span>🛡️</span> Admin'
     : '<span>🏥</span> PIC Klinik';
   document.getElementById('role-pill').className = `role-pill ${isSuper ? 'super' : 'pic'}`;
   document.querySelectorAll('.super-only').forEach(el => {
@@ -1374,27 +1488,41 @@ function renderPICTable() {
     tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="eico">👤</div><p>Tiada PIC didaftarkan</p></div></td></tr>';
     return;
   }
+  // Sort: pending first, then alphabetical
+  picUsers.sort(([,a],[,b]) => {
+    const aPending = a.aktif === false ? 0 : 1;
+    const bPending = b.aktif === false ? 0 : 1;
+    if (aPending !== bPending) return aPending - bPending;
+    return (a.nama||'').localeCompare(b.nama||'');
+  });
   let i = 0;
   tbody.innerHTML = picUsers.map(([uid,u]) => {
     const clinic = clinics[u.klinikId] || {};
     const aktif = u.aktif !== false;
-    return `<tr>
+    const rowBg = !aktif ? 'background:#fffbeb' : '';
+    return `<tr style="${rowBg}">
       <td class="muted">${++i}</td>
       <td>
-        <div class="fw7">${u.nama||'—'}</div>
+        <div class="fw7">${u.nama||'—'} ${!aktif ? '<span class="tag tag-urgent" style="font-size:9px;margin-left:4px">⏳ Menunggu</span>' : ''}</div>
         <div class="muted">${u.jawatan||''}</div>
       </td>
       <td class="mono muted" style="font-size:11px">${u.email||'—'}</td>
       <td>${clinic.nama ? `<span class="tag tag-pic">${clinic.nama}</span>` : '—'}</td>
-      <td><span class="dot ${aktif?'dot-green':'dot-red'}"></span>${aktif?'Aktif':'Tidak Aktif'}</td>
+      <td><span class="dot ${aktif?'dot-green':'dot-orange'}"></span>${aktif?'Aktif':'Menunggu Pengesahan'}</td>
       <td class="muted">${fmt(u.tarikhDaftar)}</td>
-      <td>
+      <td style="white-space:nowrap">
+        ${!aktif ? `<button class="btn btn-primary btn-sm" onclick="approvePIC('${uid}')" style="padding:4px 8px;font-size:10px">✅ Aktifkan</button>` : ''}
         <button class="btn-icon" onclick="editPIC('${uid}')">✏️</button>
         <button class="btn-icon del" onclick="deletePIC('${uid}')">🗑️</button>
       </td>
     </tr>`;
   }).join('');
 }
+
+window.approvePIC = async uid => {
+  await update(ref(db, `users/${uid}`), { aktif: true });
+  toast('✅ Akaun PIC diaktifkan!');
+};
 
 /* ── ADD/EDIT PATIENT ───────────────────────────────────── */
 window.openAddPatient = () => {
