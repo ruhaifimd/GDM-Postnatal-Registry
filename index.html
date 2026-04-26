@@ -89,11 +89,11 @@ input, select, textarea, button { font-family: var(--font); }
   text-align: center;
 }
 .auth-logo {
-  width: 56px; height: 56px; margin: 0 auto 14px;
+  width: 64px; height: 64px; margin: 0 auto 14px;
   background: linear-gradient(135deg, var(--teal3), var(--teal));
-  border-radius: 16px;
+  border-radius: 18px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 26px; box-shadow: 0 4px 16px rgba(26,179,148,.4);
+  box-shadow: 0 6px 20px rgba(26,179,148,.4);
 }
 .auth-title { font-size: 20px; font-weight: 800; color: white; line-height: 1.2; }
 .auth-sub   { font-size: 12px; color: rgba(255,255,255,.55); margin-top: 4px; }
@@ -131,7 +131,7 @@ input, select, textarea, button { font-family: var(--font); }
 .auth-role-btn.active {
   border-color: var(--teal2); background: #e6faf7; color: var(--teal);
 }
-.auth-role-btn .role-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+.auth-role-btn .role-icon { display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; }
 
 .form-group { margin-bottom: 16px; }
 .form-label { display: block; font-size: 11px; font-weight: 700; color: var(--g600); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .5px; }
@@ -410,7 +410,16 @@ tr:hover td { background: var(--g50); }
   <div class="auth-dots"></div>
   <div class="auth-card">
     <div class="auth-header">
-      <div class="auth-logo">🩺</div>
+      <div class="auth-logo">
+        <svg viewBox="0 0 48 48" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="18" r="8" stroke="white" stroke-width="2.5" fill="none"/>
+          <path d="M24 10 C24 10 26 14 24 18 C22 14 24 10 24 10Z" fill="rgba(255,255,255,.5)"/>
+          <path d="M14 38 C14 30 18 26 24 26 C30 26 34 30 34 38" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M20 34 L24 38 L28 34" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="37" cy="12" r="6" fill="rgba(255,255,255,.15)" stroke="white" stroke-width="1.5"/>
+          <path d="M37 9.5V14.5M34.5 12H39.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
       <div class="auth-title">GDM Postnatal e-Registry</div>
       <div class="auth-sub">Pejabat Kesihatan Daerah Tumpat, Kelantan</div>
     </div>
@@ -423,7 +432,9 @@ tr:hover td { background: var(--g50); }
     <!-- ── BOOTSTRAP (first-time setup) ── -->
     <div class="auth-body" id="auth-bootstrap-panel" style="display:none">
       <div style="text-align:center;margin-bottom:16px">
-        <div style="font-size:40px">🚀</div>
+        <div style="width:56px;height:56px;margin:0 auto;background:linear-gradient(135deg,#22d3b0,#0d7377);border-radius:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(13,115,119,.3)">
+          <svg viewBox="0 0 48 48" width="30" height="30" fill="none"><circle cx="24" cy="18" r="8" stroke="white" stroke-width="2.5"/><path d="M24 10C24 10 26 14 24 18C22 14 24 10 24 10Z" fill="rgba(255,255,255,.5)"/><path d="M14 38C14 30 18 26 24 26C30 26 34 30 34 38" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="37" cy="12" r="6" fill="rgba(255,255,255,.15)" stroke="white" stroke-width="1.5"/><path d="M37 9.5V14.5M34.5 12H39.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
         <div style="font-size:16px;font-weight:800;color:var(--navy);margin-top:8px">Persediaan Pertama</div>
         <div style="font-size:12px;color:var(--g500);margin-top:4px;line-height:1.5">Tiada akaun dalam sistem lagi. Cipta akaun Admin pertama untuk mula menggunakan aplikasi.</div>
       </div>
@@ -456,10 +467,10 @@ tr:hover td { background: var(--g50); }
     <div class="auth-body" id="auth-login-panel">
       <div class="auth-role-tabs">
         <div class="auth-role-btn active" id="rb-super" onclick="selectRole('super')">
-          <span class="role-icon">🛡️</span>Admin
+          <span class="role-icon"><svg viewBox="0 0 32 32" width="24" height="24" fill="none"><circle cx="16" cy="11" r="5" stroke="currentColor" stroke-width="2"/><path d="M8 27c0-5 4-8 8-8s8 3 8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M22 8l2-3 2 3M23 5v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>Admin
         </div>
         <div class="auth-role-btn" id="rb-pic" onclick="selectRole('pic')">
-          <span class="role-icon">🏥</span>PIC Klinik
+          <span class="role-icon"><svg viewBox="0 0 32 32" width="24" height="24" fill="none"><rect x="6" y="8" width="20" height="18" rx="3" stroke="currentColor" stroke-width="2"/><path d="M6 14h20" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="21" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M13 8V5a3 3 0 016 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>PIC Klinik
         </div>
       </div>
       <div class="auth-error" id="auth-error"></div>
@@ -492,10 +503,10 @@ tr:hover td { background: var(--g50); }
       <!-- Role selector for signup -->
       <div class="auth-role-tabs" style="margin-bottom:16px">
         <div class="auth-role-btn active" id="su-rb-super" onclick="selectSuRole('super')">
-          <span class="role-icon">🛡️</span>Admin
+          <span class="role-icon"><svg viewBox="0 0 32 32" width="24" height="24" fill="none"><circle cx="16" cy="11" r="5" stroke="currentColor" stroke-width="2"/><path d="M8 27c0-5 4-8 8-8s8 3 8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M22 8l2-3 2 3M23 5v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>Admin
         </div>
         <div class="auth-role-btn" id="su-rb-pic" onclick="selectSuRole('pic')">
-          <span class="role-icon">🏥</span>PIC Klinik
+          <span class="role-icon"><svg viewBox="0 0 32 32" width="24" height="24" fill="none"><rect x="6" y="8" width="20" height="18" rx="3" stroke="currentColor" stroke-width="2"/><path d="M6 14h20" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="21" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M13 8V5a3 3 0 016 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>PIC Klinik
         </div>
       </div>
 
@@ -511,9 +522,7 @@ tr:hover td { background: var(--g50); }
       </div>
       <div class="form-group" id="su-pic-clinic-wrap" style="display:none">
         <label class="form-label">Klinik (PIC) *</label>
-        <select class="form-control" id="su-klinik">
-          <option value="">— Pilih klinik anda —</option>
-        </select>
+        <input class="form-control" id="su-klinik" placeholder="cth: KK Wakaf Bharu">
       </div>
       <div class="form-row fr-2">
         <div class="form-group">
@@ -566,7 +575,15 @@ tr:hover td { background: var(--g50); }
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-brand">
-      <div class="tb-logo">🩺</div>
+      <div class="tb-logo">
+        <svg viewBox="0 0 48 48" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="18" r="8" stroke="white" stroke-width="2.5" fill="none"/>
+          <path d="M24 10 C24 10 26 14 24 18 C22 14 24 10 24 10Z" fill="rgba(255,255,255,.5)"/>
+          <path d="M14 38 C14 30 18 26 24 26 C30 26 34 30 34 38" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <circle cx="37" cy="12" r="6" fill="rgba(255,255,255,.15)" stroke="white" stroke-width="1.5"/>
+          <path d="M37 9.5V14.5M34.5 12H39.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
       <div>
         <div class="tb-title">GDM Postnatal e-Registry</div>
         <div class="tb-sub" id="tb-clinic-name">PKD Tumpat</div>
@@ -691,7 +708,7 @@ tr:hover td { background: var(--g50); }
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       <button class="btn btn-primary" id="adm-tab-klinik" onclick="switchAdminTab('klinik')">🏥 Klinik</button>
       <button class="btn btn-ghost" id="adm-tab-pic" onclick="switchAdminTab('pic')">👤 PIC Klinik</button>
-      <button class="btn btn-ghost" id="adm-tab-admins" onclick="switchAdminTab('admins')">🛡️ Admin</button>
+      <button class="btn btn-ghost" id="adm-tab-admins" onclick="switchAdminTab('admins')">👑 Admin</button>
     </div>
 
     <!-- ADMIN: Klinik -->
@@ -725,7 +742,7 @@ tr:hover td { background: var(--g50); }
     <div id="adm-admins" style="display:none">
       <div class="card">
         <div class="card-hdr">
-          <div class="card-title">🛡️ Pengurusan Akaun Admin</div>
+          <div class="card-title">👑 Pengurusan Akaun Admin</div>
           <button class="btn btn-primary btn-sm" onclick="openAddAdmin()">+ Daftar Admin Baru</button>
         </div>
         <div class="tbl-wrap">
@@ -786,7 +803,7 @@ tr:hover td { background: var(--g50); }
       <div class="form-group"><label class="form-label">E-mel (Username) *</label><input class="form-control" id="pic-email" type="email" placeholder="email@moh.gov.my"></div>
       <div class="form-row fr-2">
         <div class="form-group"><label class="form-label">Kata Laluan *</label><input class="form-control" id="pic-pass" type="password" placeholder="Min. 6 aksara"></div>
-        <div class="form-group"><label class="form-label">Klinik *</label><select class="form-control" id="pic-klinik"></select></div>
+        <div class="form-group"><label class="form-label">Klinik *</label><input class="form-control" id="pic-klinik" placeholder="cth: KK Wakaf Bharu"></div>
       </div>
       <div class="form-group"><label class="form-label">No. Telefon</label><input class="form-control" id="pic-tel" placeholder="01X-XXXXXXX"></div>
       <input type="hidden" id="pic-uid">
@@ -1063,17 +1080,6 @@ window.selectSuRole = role => {
   // Update button label
   document.getElementById('signup-btn-text').textContent =
     role === 'super' ? 'Daftar Akaun Admin' : 'Hantar Permohonan PIC';
-
-  // Populate clinic dropdown when switching to PIC
-  if (role === 'pic') {
-    const sel = document.getElementById('su-klinik');
-    const prev = sel.value;
-    sel.innerHTML = '<option value="">— Pilih klinik anda —</option>';
-    Object.entries(clinics).forEach(([id,c]) => {
-      sel.innerHTML += `<option value="${id}">${c.nama}</option>`;
-    });
-    sel.value = prev;
-  }
 };
 
 // Validate organisational email domain
@@ -1096,7 +1102,7 @@ window.doSignUp = async () => {
   const pass  = document.getElementById('su-pass').value;
   const pass2 = document.getElementById('su-pass2').value;
   const code  = document.getElementById('su-code').value.trim();
-  const klinikId = document.getElementById('su-klinik').value;
+  const klinikInput = document.getElementById('su-klinik').value.trim();
 
   // Common validations
   if (!nama)  { showSuErr('Sila isi nama penuh.'); return; }
@@ -1112,7 +1118,7 @@ window.doSignUp = async () => {
   if (role === 'super') {
     if (!code) { showSuErr('Kod jemputan Admin wajib diisi.'); return; }
   } else { // PIC
-    if (!klinikId) { showSuErr('Sila pilih klinik anda.'); return; }
+    if (!klinikInput) { showSuErr('Sila isi nama klinik anda.'); return; }
   }
 
   const btn = document.getElementById('signup-btn');
@@ -1129,6 +1135,23 @@ window.doSignUp = async () => {
       if (code.toUpperCase() !== validCode.toUpperCase()) {
         showSuErr('Kod jemputan tidak sah. Sila hubungi PKD Tumpat.');
         return;
+      }
+    }
+
+    // PIC: find or create clinic
+    let klinikId = '';
+    if (role === 'pic' && klinikInput) {
+      const clinicSnap = await get(ref(db, 'klinik'));
+      const allClinics = clinicSnap.val() || {};
+      const existing = Object.entries(allClinics).find(([,c]) =>
+        (c.nama || '').toLowerCase() === klinikInput.toLowerCase()
+      );
+      if (existing) {
+        klinikId = existing[0];
+      } else {
+        const newRef = push(ref(db, 'klinik'));
+        await set(newRef, { nama: klinikInput, kawasan: '', tarikhDaftar: today() });
+        klinikId = newRef.key;
       }
     }
 
@@ -1321,8 +1344,8 @@ function bootApp() {
   // Role UI
   const isSuper = currentUser.role === 'super';
   document.getElementById('role-pill').innerHTML = isSuper
-    ? '<span>🛡️</span> Admin'
-    : '<span>🏥</span> PIC Klinik';
+    ? '<svg viewBox="0 0 32 32" width="14" height="14" fill="none" style="vertical-align:-2px"><circle cx="16" cy="11" r="5" stroke="currentColor" stroke-width="2.5"/><path d="M8 27c0-5 4-8 8-8s8 3 8 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M22 8l2-3 2 3M23 5v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Admin'
+    : '<svg viewBox="0 0 32 32" width="14" height="14" fill="none" style="vertical-align:-2px"><rect x="6" y="8" width="20" height="18" rx="3" stroke="currentColor" stroke-width="2.5"/><path d="M6 14h20" stroke="currentColor" stroke-width="2.5"/><circle cx="16" cy="21" r="2.5" stroke="currentColor" stroke-width="2"/></svg> PIC Klinik';
   document.getElementById('role-pill').className = `role-pill ${isSuper ? 'super' : 'pic'}`;
   document.querySelectorAll('.super-only').forEach(el => {
     el.style.display = isSuper ? (el.classList.contains('btn') ? 'inline-flex' : '') : 'none';
@@ -1365,7 +1388,7 @@ function onDataChange() {
 
 /* ── SELECTS ────────────────────────────────────────────── */
 function populateKlinikSelects() {
-  ['pat-klinik','ll-klinik','pic-klinik'].forEach(sid => {
+  ['pat-klinik','ll-klinik'].forEach(sid => {
     const sel = document.getElementById(sid);
     if (!sel) return;
     const prev = sel.value;
@@ -1466,14 +1489,14 @@ window.savePIC = async () => {
   const nama    = document.getElementById('pic-nama').value.trim();
   const email   = document.getElementById('pic-email').value.trim().toLowerCase();
   const pass    = document.getElementById('pic-pass').value;
-  const klinikId= document.getElementById('pic-klinik').value;
+  const klinikInput = document.getElementById('pic-klinik').value.trim();
   const jawatan = document.getElementById('pic-jawatan').value.trim();
   const tel     = document.getElementById('pic-tel').value.trim();
   const uid     = document.getElementById('pic-uid').value;
 
   // Validate
   if (!nama || !email) { toast('⚠️ Nama dan E-mel wajib diisi!'); return; }
-  if (!isAdmMode && !uid && !klinikId) { toast('⚠️ Klinik wajib dipilih untuk PIC!'); return; }
+  if (!isAdmMode && !uid && !klinikInput) { toast('⚠️ Nama klinik wajib diisi untuk PIC!'); return; }
   if (!isValidOrgEmail(email) && !uid) { toast(`⚠️ E-mel mesti @${ALLOWED_DOMAIN}!`); return; }
 
   const btn = document.getElementById('pic-save-btn');
@@ -1481,6 +1504,26 @@ window.savePIC = async () => {
   btn.disabled = true; btn.textContent = '⏳ Memproses…';
 
   try {
+    // Find or create clinic from free text
+    let klinikId = '';
+    let klinikNama = klinikInput;
+    if (!isAdmMode && klinikInput) {
+      // Check if clinic already exists (case-insensitive match)
+      const existing = Object.entries(clinics).find(([,c]) =>
+        (c.nama || '').toLowerCase() === klinikInput.toLowerCase()
+      );
+      if (existing) {
+        klinikId = existing[0];
+        klinikNama = existing[1].nama;
+      } else {
+        // Create new clinic automatically
+        const newRef = push(ref(db, 'klinik'));
+        await set(newRef, { nama: klinikInput, kawasan: '', tarikhDaftar: today() });
+        klinikId = newRef.key;
+        klinikNama = klinikInput;
+      }
+    }
+
     if (!uid) {
       // Creating new account
       if (!pass || pass.length < 6) { toast('⚠️ Kata laluan minimum 6 aksara!'); btn.disabled=false; btn.textContent=originalLabel; return; }
@@ -1496,12 +1539,12 @@ window.savePIC = async () => {
         renderAdminTable();
       } else {
         toast('✅ PIC berjaya didaftarkan!');
-        await sendWelcomeEmail({ nama, email, password: pass, klinikNama: clinics[klinikId]?.nama || klinikId });
+        await sendWelcomeEmail({ nama, email, password: pass, klinikNama });
       }
     } else {
       // Update existing
       const updates = { nama, jawatan, tel };
-      if (!isAdmMode) updates.klinikId = klinikId;
+      if (!isAdmMode && klinikId) updates.klinikId = klinikId;
       await update(ref(db, `users/${uid}`), updates);
       toast('✅ Akaun dikemaskini!');
     }
@@ -1577,13 +1620,16 @@ window.editPIC = async uid => {
   if (!u) return;
   document.getElementById('pic-modal-title').textContent = '✏️ Kemaskini PIC';
   document.getElementById('pic-save-btn').textContent = '💾 Kemaskini';
+  document.getElementById('pic-save-btn').removeAttribute('data-adm-mode');
   document.getElementById('pic-nama').value    = u.nama || '';
   document.getElementById('pic-email').value   = u.email || '';
   document.getElementById('pic-email').disabled = true;
   document.getElementById('pic-pass').value    = '';
   document.getElementById('pic-jawatan').value = u.jawatan || '';
   document.getElementById('pic-tel').value     = u.tel || '';
-  document.getElementById('pic-klinik').value  = u.klinikId || '';
+  // Show clinic name (not ID) in text input
+  document.getElementById('pic-klinik').value  = clinics[u.klinikId]?.nama || u.klinikId || '';
+  document.getElementById('pic-klinik').closest('.form-group').style.display = '';
   document.getElementById('pic-uid').value     = uid;
   openModal('mo-pic');
 };
