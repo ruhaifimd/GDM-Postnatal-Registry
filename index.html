@@ -98,7 +98,28 @@ input, select, textarea, button { font-family: var(--font); }
 .auth-title { font-size: 20px; font-weight: 800; color: white; line-height: 1.2; }
 .auth-sub   { font-size: 12px; color: rgba(255,255,255,.55); margin-top: 4px; }
 .auth-body  { padding: 28px; }
-.auth-role-tabs {
+.auth-mode-bar {
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.auth-mode-btn {
+  padding: 12px; border: none; background: transparent;
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  color: rgba(255,255,255,.45); cursor: pointer; transition: all .2s;
+  border-bottom: 2px solid transparent;
+}
+.auth-mode-btn.active {
+  color: white; border-bottom-color: var(--teal3);
+  background: rgba(255,255,255,.05);
+}
+.auth-mode-btn:hover:not(.active) { color: rgba(255,255,255,.7); }
+
+.auth-signup-notice {
+  background: #f0fdf4; border: 1px solid #86efac;
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 16px;
+}
+
+
   display: grid; grid-template-columns: 1fr 1fr;
   gap: 8px; margin-bottom: 20px;
 }
@@ -393,7 +414,14 @@ tr:hover td { background: var(--g50); }
       <div class="auth-title">GDM Postnatal e-Registry</div>
       <div class="auth-sub">Pejabat Kesihatan Daerah Tumpat, Kelantan</div>
     </div>
-    <div class="auth-body">
+    <!-- Auth mode switcher -->
+    <div class="auth-mode-bar">
+      <button class="auth-mode-btn active" id="amode-login" onclick="switchAuthMode('login')">Log Masuk</button>
+      <button class="auth-mode-btn" id="amode-signup" onclick="switchAuthMode('signup')">Daftar Akaun</button>
+    </div>
+
+    <!-- ── LOGIN ── -->
+    <div class="auth-body" id="auth-login-panel">
       <div class="auth-role-tabs">
         <div class="auth-role-btn active" id="rb-super" onclick="selectRole('super')">
           <span class="role-icon">🛡️</span>Super Admin
@@ -404,18 +432,69 @@ tr:hover td { background: var(--g50); }
       </div>
       <div class="auth-error" id="auth-error"></div>
       <div class="form-group">
-        <label class="form-label">E-mel / Username</label>
+        <label class="form-label">E-mel</label>
         <input class="form-control" id="auth-email" type="email" placeholder="contoh@moh.gov.my" autocomplete="email">
       </div>
       <div class="form-group">
         <label class="form-label">Kata Laluan</label>
-        <input class="form-control" id="auth-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+        <div style="position:relative">
+          <input class="form-control" id="auth-pass" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:42px">
+          <button onclick="togglePw('auth-pass','eye-login')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--g400);font-size:16px" id="eye-login">👁</button>
+        </div>
       </div>
       <button class="auth-btn" id="login-btn" onclick="doLogin()">
         <span id="login-btn-text">Log Masuk</span>
       </button>
-      <div style="margin-top:16px;text-align:center;font-size:11px;color:var(--g400)">
+      <div style="margin-top:14px;text-align:center;font-size:11px;color:var(--g400)">
         🔒 Sistem Tertutup · Akses Terhad Kakitangan Kesihatan Sahaja
+      </div>
+    </div>
+
+    <!-- ── SIGN UP ── -->
+    <div class="auth-body" id="auth-signup-panel" style="display:none">
+      <div class="auth-signup-notice">
+        <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:4px">📋 Pendaftaran Akaun Baru</div>
+        <div style="font-size:12px;color:var(--g600);line-height:1.5">Pendaftaran terbuka untuk <b>Super Admin</b> sahaja. Akaun PIC Klinik didaftarkan oleh Super Admin melalui panel Admin.</div>
+      </div>
+      <div class="auth-error" id="signup-error"></div>
+      <div class="form-group">
+        <label class="form-label">Nama Penuh *</label>
+        <input class="form-control" id="su-nama" placeholder="Nama penuh anda">
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-mel *</label>
+        <input class="form-control" id="su-email" type="email" placeholder="contoh@moh.gov.my">
+      </div>
+      <div class="form-group">
+        <label class="form-label">No. Telefon</label>
+        <input class="form-control" id="su-tel" placeholder="01X-XXXXXXX">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kata Laluan * <span style="color:var(--g400);font-weight:400;font-size:10px">(Min. 6 aksara)</span></label>
+        <div style="position:relative">
+          <input class="form-control" id="su-pass" type="password" placeholder="Cipta kata laluan" style="padding-right:42px" oninput="checkPwStrength()">
+          <button onclick="togglePw('su-pass','eye-su')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--g400);font-size:16px" id="eye-su">👁</button>
+        </div>
+        <div id="pw-strength-bar" style="margin-top:6px;height:4px;border-radius:99px;background:var(--g200);overflow:hidden;display:none">
+          <div id="pw-strength-fill" style="height:100%;border-radius:99px;transition:width .3s,background .3s;width:0%"></div>
+        </div>
+        <div id="pw-strength-lbl" style="font-size:10px;margin-top:4px;color:var(--g400)"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sahkan Kata Laluan *</label>
+        <input class="form-control" id="su-pass2" type="password" placeholder="Ulang kata laluan">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kod Jemputan Admin *
+          <span style="color:var(--g400);font-weight:400;font-size:10px;margin-left:4px">Hubungi PKD Tumpat untuk kod</span>
+        </label>
+        <input class="form-control" id="su-code" placeholder="Masukkan kod jemputan" autocomplete="off">
+      </div>
+      <button class="auth-btn" id="signup-btn" onclick="doSignUp()">
+        <span id="signup-btn-text">Daftar Akaun Super Admin</span>
+      </button>
+      <div style="margin-top:10px;text-align:center">
+        <button onclick="switchAuthMode('login')" style="background:none;border:none;color:var(--teal);font-size:12px;font-weight:600;cursor:pointer">← Kembali ke Log Masuk</button>
       </div>
     </div>
   </div>
@@ -837,6 +916,111 @@ window.selectRole = r => {
   selectedRole = r;
   document.getElementById('rb-super').classList.toggle('active', r === 'super');
   document.getElementById('rb-pic').classList.toggle('active', r === 'pic');
+};
+
+window.switchAuthMode = mode => {
+  const isLogin = mode === 'login';
+  document.getElementById('auth-login-panel').style.display  = isLogin ? '' : 'none';
+  document.getElementById('auth-signup-panel').style.display = isLogin ? 'none' : '';
+  document.getElementById('amode-login').classList.toggle('active',  isLogin);
+  document.getElementById('amode-signup').classList.toggle('active', !isLogin);
+  hideErr();
+  document.getElementById('signup-error').classList.remove('show');
+};
+
+window.togglePw = (inputId, btnId) => {
+  const inp = document.getElementById(inputId);
+  const isText = inp.type === 'text';
+  inp.type = isText ? 'password' : 'text';
+  document.getElementById(btnId).textContent = isText ? '👁' : '🙈';
+};
+
+window.checkPwStrength = () => {
+  const pw = document.getElementById('su-pass').value;
+  const bar = document.getElementById('pw-strength-bar');
+  const fill= document.getElementById('pw-strength-fill');
+  const lbl = document.getElementById('pw-strength-lbl');
+  if (!pw) { bar.style.display='none'; lbl.textContent=''; return; }
+  bar.style.display = 'block';
+  let score = 0;
+  if (pw.length >= 6)  score++;
+  if (pw.length >= 10) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const levels = [
+    { pct:'20%', color:'#ef4444', txt:'Sangat Lemah' },
+    { pct:'40%', color:'#f97316', txt:'Lemah' },
+    { pct:'60%', color:'#eab308', txt:'Sederhana' },
+    { pct:'80%', color:'#22c55e', txt:'Kuat' },
+    { pct:'100%',color:'#16a34a', txt:'Sangat Kuat' },
+  ];
+  const lv = levels[Math.min(score-1, 4)] || levels[0];
+  fill.style.width = lv.pct; fill.style.background = lv.color;
+  lbl.textContent = lv.txt; lbl.style.color = lv.color;
+};
+
+// Invite code stored in Firebase at /config/inviteCode — Super Admin boleh tukar
+const FALLBACK_INVITE = 'PKDTUMPAT2025';
+
+window.doSignUp = async () => {
+  const showSuErr = msg => {
+    const el = document.getElementById('signup-error');
+    el.textContent = msg; el.classList.add('show');
+  };
+  document.getElementById('signup-error').classList.remove('show');
+
+  const nama  = document.getElementById('su-nama').value.trim();
+  const email = document.getElementById('su-email').value.trim();
+  const tel   = document.getElementById('su-tel').value.trim();
+  const pass  = document.getElementById('su-pass').value;
+  const pass2 = document.getElementById('su-pass2').value;
+  const code  = document.getElementById('su-code').value.trim();
+
+  if (!nama)  { showSuErr('Nama penuh wajib diisi.'); return; }
+  if (!email) { showSuErr('E-mel wajib diisi.'); return; }
+  if (pass.length < 6) { showSuErr('Kata laluan minimum 6 aksara.'); return; }
+  if (pass !== pass2)  { showSuErr('Kata laluan tidak sepadan. Sila semak semula.'); return; }
+  if (!code)  { showSuErr('Kod jemputan wajib diisi.'); return; }
+
+  const btn = document.getElementById('signup-btn');
+  btn.disabled = true;
+  document.getElementById('signup-btn-text').textContent = 'Mendaftar…';
+
+  try {
+    // Validate invite code from Firebase (or fallback)
+    const codeSnap = await get(ref(db, 'config/inviteCode'));
+    const validCode = codeSnap.val() || FALLBACK_INVITE;
+    if (code.toUpperCase() !== validCode.toUpperCase()) {
+      showSuErr('Kod jemputan tidak sah. Sila hubungi PKD Tumpat.');
+      return;
+    }
+
+    // Create Firebase Auth user
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    const uid  = cred.user.uid;
+
+    // Save to /users
+    await set(ref(db, `users/${uid}`), {
+      nama, email, tel,
+      role: 'super',
+      aktif: true,
+      tarikhDaftar: today(),
+    });
+
+    toast('✅ Akaun Super Admin berjaya didaftarkan! Sila log masuk.');
+    // Sign out immediately — force explicit login
+    await signOut(auth);
+    switchAuthMode('login');
+    document.getElementById('auth-email').value = email;
+  } catch(e) {
+    if (e.code === 'auth/email-already-in-use') showSuErr('E-mel ini sudah didaftarkan.');
+    else if (e.code === 'auth/invalid-email')   showSuErr('Format e-mel tidak sah.');
+    else showSuErr('Ralat: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    document.getElementById('signup-btn-text').textContent = 'Daftar Akaun Super Admin';
+  }
 };
 
 window.doLogin = async () => {
