@@ -515,7 +515,10 @@ tr:hover td { background: var(--g50); }
     <div class="card">
       <div class="card-hdr">
         <div class="card-title">📋 Senarai Pesakit <span class="badge" id="ll-count">0</span></div>
-        <button class="btn btn-primary btn-sm" onclick="openAddPatient()">+ Tambah Pesakit</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="openAddPatient()">+ Tambah Pesakit</button>
+          <button class="btn btn-ghost btn-sm super-only" id="btn-csv" onclick="downloadCSV()" style="display:none">⬇️ Muat Turun CSV</button>
+        </div>
       </div>
       <div class="tbl-wrap">
         <table>
@@ -893,7 +896,7 @@ function bootApp() {
     : '<span>🏥</span> PIC Klinik';
   document.getElementById('role-pill').className = `role-pill ${isSuper ? 'super' : 'pic'}`;
   document.querySelectorAll('.super-only').forEach(el => {
-    el.style.display = isSuper ? '' : 'none';
+    el.style.display = isSuper ? (el.classList.contains('btn') ? 'inline-flex' : '') : 'none';
   });
 
   // Realtime listeners
@@ -1498,6 +1501,102 @@ window.renderLL = () => {
       </td>
     </tr>`;
   }).join('');
+};
+
+/* ── DOWNLOAD CSV ────────────────────────────────────────── */
+window.downloadCSV = () => {
+  if (currentUser?.role !== 'super') { toast('⚠️ Akses ditolak.'); return; }
+
+  const YEARS = ['2027','2028','2029','2030'];
+
+  const headers = [
+    'No','Nama Penuh','No. IC','No. Tel','No. Tel Alt','Alamat',
+    'Klinik','Tarikh Bersalin','Parity','Tinggi (m)','Berat (kg)','BMI',
+    'Hipertensi','Hiperlipidemia','Anemia','Komorbid Lain',
+    'Tarikh OGTT 6mg (Sasaran)','Tarikh OGTT 6mg (Sebenar)',
+    'OGTT 0-jam (mmol/L)','OGTT 2-jam (mmol/L)','Keputusan OGTT 6mg',
+    ...YEARS.flatMap(yr=>[
+      `Tarikh Ujian ${yr} (Sasaran)`,
+      `Tarikh Ujian ${yr} (Sebenar)`,
+      `Jenis Ujian ${yr}`,
+      `Nilai ${yr}`,
+      `Keputusan ${yr}`,
+    ]),
+    'Tarikh Daftar'
+  ];
+
+  // Sort by clinic then name
+  const entries = Object.entries(patients).sort(([,a],[,b])=>{
+    const ca = clinics[a.klinikId]?.nama||''; const cb = clinics[b.klinikId]?.nama||'';
+    return ca.localeCompare(cb) || (a.nama||'').localeCompare(b.nama||'');
+  });
+
+  let no = 0;
+  const rows = entries.map(([,p]) => {
+    const clinic = clinics[p.klinikId]||{};
+    const bmi = (p.tinggi&&p.berat) ? (p.berat/(p.tinggi**2)).toFixed(1) : '';
+    const d6w  = addDays(p.tarikhBersalin, 42);
+    const d27  = addDays(p.tarikhBersalin, 365);
+    const d28  = addDays(d27, 365);
+    const d29  = addDays(d28, 365);
+    const d30  = addDays(d29, 365);
+    const tgtDates = { '2027':d27, '2028':d28, '2029':d29, '2030':d30 };
+    const r6 = p.ogtt6w ? (ogttRes(p.ogtt6w.fasting, p.ogtt6w.postprandial)||'') : '';
+
+    const yearCols = YEARS.flatMap(yr => {
+      const yd = p.ujianTahunan?.[yr];
+      const res = yd ? (yrRes(yd.jenis, yd.nilai)||'') : '';
+      return [
+        fmt(tgtDates[yr]),
+        yd ? fmt(yd.tarikhUjian) : '',
+        yd?.jenis || '',
+        yd?.nilai  || '',
+        res,
+      ];
+    });
+
+    return [
+      ++no,
+      p.nama||'', p.ic||'', p.tel||'', p.tel2||'', p.alamat||'',
+      clinic.nama||'',
+      fmt(p.tarikhBersalin), p.parity||'', p.tinggi||'', p.berat||'', bmi,
+      p.htn||'', p.hld||'', p.anemia||'', p.komorbidLain||'',
+      fmt(d6w),
+      p.ogtt6w ? fmt(p.ogtt6w.tarikhUjian) : '',
+      p.ogtt6w?.fasting||'', p.ogtt6w?.postprandial||'', r6,
+      ...yearCols,
+      fmt(p.tarikhDaftar),
+    ];
+  });
+
+  // Build CSV string
+  const esc = v => {
+    const s = String(v ?? '');
+    return (s.includes(',') || s.includes('"') || s.includes('\n'))
+      ? `"${s.replace(/"/g,'""')}"` : s;
+  };
+  const csvLines = [
+    `GDM Postnatal e-Registry — PKD Tumpat Kelantan`,
+    `Dimuat turun: ${new Date().toLocaleString('ms-MY')}`,
+    `Jumlah rekod: ${rows.length}`,
+    '',
+    headers.map(esc).join(','),
+    ...rows.map(r => r.map(esc).join(',')),
+  ];
+  const csv = '\uFEFF' + csvLines.join('\r\n'); // BOM for Excel UTF-8
+
+  // Trigger download
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const ts   = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  a.href = url;
+  a.download = `GDM_Linelisting_PKDTumpat_${ts}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast(`✅ CSV berjaya dimuat turun — ${rows.length} rekod`);
 };
 
 /* ── RENDER REMINDER ────────────────────────────────────── */
