@@ -392,20 +392,33 @@ tr:hover td { background: rgba(13,115,119,.02); }
 
 /* COLOUR-CODED REMINDER ROWS */
 .rem-row { border-radius: var(--r); padding: 14px 18px; margin-bottom: 10px; border: 1px solid; transition: all .2s; }
-.rem-row.zone-green  { background: #f0fdf4; border-color: #86efac; }
-.rem-row.zone-orange { background: #fffbeb; border-color: #fbbf24; }
-.rem-row.zone-red    { background: #fef2f2; border-color: #fca5a5; animation: pulseRed 2s ease infinite; }
-.rem-row.zone-done   { background: var(--g50); border-color: var(--g200); opacity: .65; }
-.rem-row.zone-neutral{ background: white; border-color: var(--g200); }
-@keyframes pulseRed {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,.15); }
-  50% { box-shadow: 0 0 0 6px rgba(239,68,68,.08); }
+.rem-row.zone-green    { background: #f0fdf4; border-color: #86efac; }
+.rem-row.zone-orange   { background: #fffbeb; border-color: #fbbf24; }
+.rem-row.zone-red      { background: #fef2f2; border-color: #fca5a5; }
+.rem-row.zone-darkred  { background: #450a0a; border-color: #991b1b; animation: pulseDark 2s ease infinite; }
+.rem-row.zone-darkred, .rem-row.zone-darkred * { color: #fecaca !important; }
+.rem-row.zone-darkred .muted { color: #fca5a5 !important; }
+.rem-row.zone-darkred .mono { color: #fecaca !important; }
+.rem-row.zone-darkred .btn { color: white !important; }
+.rem-row.zone-darkred .status-select, .rem-row.zone-darkred .remark-input {
+  background: #7f1d1d; border-color: #991b1b; color: #fef2f2;
+}
+.rem-row.zone-done     { background: var(--g50); border-color: var(--g200); opacity: .6; }
+.rem-row.zone-neutral  { background: white; border-color: var(--g200); }
+@keyframes pulseDark {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(153,27,27,.3); }
+  50% { box-shadow: 0 0 0 8px rgba(153,27,27,.1); }
 }
 .zone-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
-.zone-dot.green  { background: var(--green2); box-shadow: 0 0 6px rgba(16,185,129,.4); }
-.zone-dot.orange { background: var(--yellow2); box-shadow: 0 0 6px rgba(251,191,36,.4); }
-.zone-dot.red    { background: var(--red2); box-shadow: 0 0 6px rgba(239,68,68,.4); }
-.zone-dot.done   { background: var(--g400); }
+.zone-dot.green   { background: var(--green2); box-shadow: 0 0 6px rgba(16,185,129,.4); }
+.zone-dot.orange  { background: var(--yellow2); box-shadow: 0 0 6px rgba(251,191,36,.4); }
+.zone-dot.red     { background: var(--red2); box-shadow: 0 0 6px rgba(239,68,68,.4); }
+.zone-dot.darkred { background: #fca5a5; box-shadow: 0 0 8px rgba(252,165,165,.6); animation: blinkDot 1.2s ease infinite; }
+.zone-dot.done    { background: var(--g400); }
+@keyframes blinkDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .4; }
+}
 
 /* STATUS SELECT in reminder */
 .status-select {
@@ -761,13 +774,25 @@ tr:hover td { background: rgba(13,115,119,.02); }
         <div class="card-title">⚠️ Peringatan & Pemantauan Temujanji Darah</div>
       </div>
       <div class="card-body" style="padding:12px 16px">
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:11px;font-weight:600">
-          <span><span class="zone-dot green"></span> Hijau: > 7 hari lagi</span>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:11px;font-weight:600;margin-bottom:10px">
+          <span><span class="zone-dot green"></span> Hijau: 8–14 hari lagi</span>
           <span><span class="zone-dot orange"></span> Oren: 2–7 hari (mula hubungi)</span>
-          <span><span class="zone-dot red"></span> Merah: Hari ini / terlepas</span>
+          <span><span class="zone-dot red"></span> Merah: Hari ini / esok</span>
+          <span><span class="zone-dot darkred"></span> Merah Gelap: Overdue (terlepas tarikh)</span>
           <span style="color:var(--g400)">⬜ Kelabu: Selesai ambil darah</span>
         </div>
-        <div class="muted" style="margin-top:6px">ℹ️ Tarikh temujanji diselaraskan — jika jatuh Jumaat/Sabtu, dianjak ke Ahad (cuti Kelantan).</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <div style="font-size:11px;font-weight:700;color:var(--g600)">Tapis mengikut warna:</div>
+          <select class="form-control" id="rem-filter" onchange="renderReminder()" style="width:auto;padding:7px 30px 7px 10px;font-size:12px;font-weight:600;max-width:260px">
+            <option value="all">🔍 Semua</option>
+            <option value="darkred">🔴 Overdue (Terlepas Tarikh)</option>
+            <option value="red">🟡 Hari Ini / Esok (Segera)</option>
+            <option value="orange">🟠 2–7 Hari (Mula Hubungi)</option>
+            <option value="green">🟢 8–14 Hari (Selamat)</option>
+            <option value="done">⬜ Selesai Ambil Darah</option>
+          </select>
+        </div>
+        <div class="muted" style="margin-top:8px">ℹ️ Tarikh temujanji diselaraskan — jika jatuh Jumaat/Sabtu, dianjak ke Ahad (cuti Kelantan).</div>
       </div>
     </div>
     <div id="reminder-list"><div class="loader"><div class="spin"></div>Memuatkan…</div></div>
@@ -1044,14 +1069,21 @@ const dayName = ds => {
   const days = ['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];
   return days[new Date(ds+'T00:00:00').getDay()];
 };
-/* Colour zone: 'green' | 'orange' | 'red' | 'done' | 'neutral' */
+/* Colour zone: 'green' | 'orange' | 'red' | 'darkred' | 'done' | 'neutral'
+   green   = 8–14 hari lagi (selamat)
+   orange  = 2–7 hari lagi (mula hubungi)
+   red     = hari ini / esok (segera)
+   darkred = sudah terlepas / overdue (kritikal)
+   done    = selesai ambil darah
+*/
 const colorZone = (ds, isDone) => {
   if (isDone) return 'done';
   const diff = diffDays(ds);
   if (diff === null) return 'neutral';
-  if (diff <= 0) return 'red';       // today or overdue
-  if (diff <= 7) return 'orange';    // 1-7 days
-  return 'green';                    // >7 days
+  if (diff < 0)  return 'darkred';   // overdue
+  if (diff <= 1) return 'red';       // today or tomorrow
+  if (diff <= 7) return 'orange';    // 2-7 days
+  return 'green';                    // 8-14 days
 };
 const diffDays = ds => {
   if (!ds) return null;
@@ -2343,29 +2375,34 @@ function renderReminder() {
     });
   });
 
-  // Sort: red first, then orange, then green, then done
-  const zoneOrder = { red:0, orange:1, green:2, done:3, neutral:4 };
+  // Sort: darkred first, then red, orange, green, done
+  const zoneOrder = { darkred:0, red:1, orange:2, green:3, done:4, neutral:5 };
   allTests.sort((a,b) => (zoneOrder[a.zone]||9) - (zoneOrder[b.zone]||9) || a.diff - b.diff);
+
+  // Apply filter
+  const filterVal = document.getElementById('rem-filter')?.value || 'all';
+  const filtered = filterVal === 'all' ? allTests : allTests.filter(t => t.zone === filterVal);
 
   updateReminderBadge(allTests.filter(t=>!t.isDone && t.diff <= 7).length);
 
-  if (!allTests.length) {
-    container.innerHTML = '<div class="card"><div class="empty"><div class="eico">✅</div><p>Tiada temujanji yang dekat buat masa ini</p><div class="muted">Pesakit dengan tarikh ujian dalam 14 hari akan dipaparkan di sini</div></div></div>';
+  if (!filtered.length) {
+    container.innerHTML = `<div class="card"><div class="empty"><div class="eico">${filterVal==='all'?'✅':'🔍'}</div><p>${filterVal==='all'?'Tiada temujanji yang dekat buat masa ini':'Tiada rekod untuk kategori ini'}</p><div class="muted">${filterVal==='all'?'Pesakit dengan tarikh ujian dalam 14 hari akan dipaparkan di sini':'Cuba pilih kategori lain dari filter di atas'}</div></div></div>`;
     return;
   }
 
-  container.innerHTML = allTests.map((t,i) => {
+  container.innerHTML = filtered.map((t,i) => {
     const curStatus = t.st.status || 'Belum Dihubungi';
     const curRemark = t.st.remark || '';
-    const diffLabel = t.diff === 0 ? '⚠️ HARI INI' : t.diff < 0 ? `🔴 ${Math.abs(t.diff)} hari terlepas` : t.diff <= 7 ? `🟠 ${t.diff} hari lagi` : `🟢 ${t.diff} hari lagi`;
+    const diffLabel = t.diff < 0 ? `🚨 ${Math.abs(t.diff)} HARI TERLEPAS` : t.diff === 0 ? '⚠️ HARI INI' : t.diff === 1 ? '⚠️ ESOK' : t.diff <= 7 ? `🟠 ${t.diff} hari lagi` : `🟢 ${t.diff} hari lagi`;
+    const dotClass = t.zone === 'done' ? 'done' : t.zone;
 
     return `
       <div class="rem-row zone-${t.zone}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
           <div style="flex:1;min-width:200px">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-              <span class="zone-dot ${t.zone==='done'?'done':t.diff<=0?'red':t.diff<=7?'orange':'green'}"></span>
-              <span style="font-weight:800;font-size:14px;color:var(--g900)">${t.p.nama||'—'}</span>
+              <span class="zone-dot ${dotClass}"></span>
+              <span style="font-weight:800;font-size:14px">${t.p.nama||'—'}</span>
             </div>
             <div style="font-size:11px;color:var(--g500);display:flex;gap:8px;flex-wrap:wrap">
               <span class="mono">${t.p.ic||'—'}</span>
