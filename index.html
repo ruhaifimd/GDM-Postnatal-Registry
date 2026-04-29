@@ -1090,6 +1090,21 @@ const diffDays = ds => {
   const d = new Date(ds + 'T00:00:00'), t = new Date(); t.setHours(0,0,0,0);
   return Math.round((d - t) / 86400000);
 };
+/* Helpers: detect if a result is meaningfully filled in (not just an empty stub) */
+const hasOgttResult = (r) => {
+  if (!r) return false;
+  return (r.fasting && String(r.fasting).trim() !== '') ||
+         (r.postprandial && String(r.postprandial).trim() !== '');
+};
+const hasYearlyResult = (r) => {
+  if (!r) return false;
+  if (r.jenis === 'OGTT') {
+    return (r.ogttFasting && String(r.ogttFasting).trim() !== '') ||
+           (r.ogttPost && String(r.ogttPost).trim() !== '');
+  }
+  return r.nilai && String(r.nilai).trim() !== '';
+};
+
 const toast = (msg, dur=2800) => {
   const el = document.getElementById('toast');
   el.textContent = msg; el.style.display = 'block';
@@ -1998,9 +2013,9 @@ function renderDetail(id) {
   const d28  = addDaysKelantan(p.tarikhBersalin, 365*2);
   const d29  = addDaysKelantan(p.tarikhBersalin, 365*3);
   const d30  = addDaysKelantan(p.tarikhBersalin, 365*4);
-  const r6   = p.ogtt6w ? ogttRes(p.ogtt6w.fasting, p.ogtt6w.postprandial) : null;
+  const r6   = hasOgttResult(p.ogtt6w) ? ogttRes(p.ogtt6w.fasting, p.ogtt6w.postprandial) : null;
   const getYrRes = (yd) => {
-    if (!yd) return null;
+    if (!hasYearlyResult(yd)) return null;
     if (yd.jenis === 'OGTT') return ogttRes(yd.ogttFasting, yd.ogttPost);
     return yrRes(yd.jenis, yd.nilai);
   };
@@ -2190,7 +2205,7 @@ window.renderLL = () => {
   let entries = Object.entries(patients).filter(([,p])=>{
     const mN = !q||(p.nama||'').toLowerCase().includes(q)||(p.ic||'').includes(q);
     const mK = !fk||p.klinikId===fk;
-    const r  = p.ogtt6w?ogttRes(p.ogtt6w.fasting,p.ogtt6w.postprandial):null;
+    const r  = hasOgttResult(p.ogtt6w) ? ogttRes(p.ogtt6w.fasting,p.ogtt6w.postprandial) : null;
     let mS = true;
     if (fs==='pending') mS=!r;
     else if (fs) mS = r&&(r===fs||r.includes(fs));
@@ -2206,11 +2221,20 @@ window.renderLL = () => {
   document.getElementById('ll-tbody').innerHTML = entries.map(([id,p])=>{
     const clinic = clinics[p.klinikId]||{};
     const d6w = addDaysKelantan(p.tarikhBersalin,42);
-    const r6  = p.ogtt6w?ogttRes(p.ogtt6w.fasting,p.ogtt6w.postprandial):null;
-    const r27 = p.ujianTahunan?.['2027'] ? (p.ujianTahunan['2027'].jenis==='OGTT'?ogttRes(p.ujianTahunan['2027'].ogttFasting,p.ujianTahunan['2027'].ogttPost):yrRes(p.ujianTahunan['2027'].jenis,p.ujianTahunan['2027'].nilai)) : null;
+    const r6  = hasOgttResult(p.ogtt6w) ? ogttRes(p.ogtt6w.fasting,p.ogtt6w.postprandial) : null;
+    const y27 = p.ujianTahunan?.['2027'];
+    const r27 = hasYearlyResult(y27) ? (y27.jenis==='OGTT'?ogttRes(y27.ogttFasting,y27.ogttPost):yrRes(y27.jenis,y27.nilai)) : null;
     const diff= diffDays(d6w);
-    const urg = diff!==null&&diff<=7&&diff>=0&&!p.ogtt6w;
-    return `<tr style="${urg?'background:#fffbeb':''}">
+    // Status alert applies whenever OGTT result not yet filled (regardless of stub objects)
+    const remStatus = p.reminderStatus?.[`${id}_ogtt6w`]?.status;
+    const isDone   = remStatus === 'Selesai Ambil Darah';
+    const needsCall = !r6 && !isDone && diff !== null;
+    const urg = needsCall && diff <= 7 && diff >= 0;
+    const overdue = needsCall && diff < 0;
+    let rowBg = '';
+    if (overdue) rowBg = 'background:#fef2f2';
+    else if (urg) rowBg = 'background:#fffbeb';
+    return `<tr style="${rowBg}">
       <td class="muted">${++n}</td>
       <td>
         <div class="fw7" style="font-size:13px">${p.nama||'—'}</div>
@@ -2220,7 +2244,7 @@ window.renderLL = () => {
       <td style="font-size:12px">${fmt(p.tarikhBersalin)}</td>
       <td>
         <div style="font-size:12px">${fmt(d6w)}</div>
-        ${urg?`<span class="tag tag-urgent" style="font-size:10px">⚠️${diff===0?'Hari ini!':diff+'h'}</span>`:''}
+        ${overdue?`<span class="tag tag-t2dm" style="font-size:10px">🚨 ${Math.abs(diff)}h overdue</span>`:urg?`<span class="tag tag-urgent" style="font-size:10px">⚠️ ${diff===0?'Hari ini!':diff+'h lagi'}</span>`:''}
       </td>
       <td>${r6?mkTag(r6):mkTag(null)}</td>
       <td>${r27?mkTag(r27):'<span class="muted">—</span>'}</td>
@@ -2266,9 +2290,9 @@ window.downloadCSV = () => {
     const bmi = (p.tinggi&&p.berat) ? (p.berat/(p.tinggi**2)).toFixed(1) : '';
     const d6w  = addDaysKelantan(p.tarikhBersalin, 42);
     const d27  = addDaysKelantan(p.tarikhBersalin, 365);
-    const d28  = addDays(d27, 365);
-    const d29  = addDays(d28, 365);
-    const d30  = addDays(d29, 365);
+    const d28  = addDaysKelantan(p.tarikhBersalin, 365*2);
+    const d29  = addDaysKelantan(p.tarikhBersalin, 365*3);
+    const d30  = addDaysKelantan(p.tarikhBersalin, 365*4);
     const tgtDates = { '2027':d27, '2028':d28, '2029':d29, '2030':d30 };
     const r6 = p.ogtt6w ? (ogttRes(p.ogtt6w.fasting, p.ogtt6w.postprandial)||'') : '';
 
@@ -2329,7 +2353,7 @@ window.downloadCSV = () => {
 };
 
 /* ── RENDER REMINDER ────────────────────────────────────── */
-function renderReminder() {
+window.renderReminder = function renderReminder() {
   const container = document.getElementById('reminder-list');
   if (!container) return;
   const YEARS = ['2027','2028','2029','2030'];
@@ -2350,12 +2374,13 @@ function renderReminder() {
     const clinic = clinics[p.klinikId]||{};
     // OGTT 6w
     const d6w = addDaysKelantan(p.tarikhBersalin, 42);
-    if (d6w && !p.ogtt6w) {
+    if (d6w && !hasOgttResult(p.ogtt6w)) {
       const diff = diffDays(d6w);
-      if (diff !== null && diff <= 14) {
-        const key = `${id}_ogtt6w`;
-        const st = p.reminderStatus?.[key] || {};
-        const isDone = st.status === 'Selesai Ambil Darah';
+      const key = `${id}_ogtt6w`;
+      const st = p.reminderStatus?.[key] || {};
+      const isDone = st.status === 'Selesai Ambil Darah';
+      // Include if: upcoming within 14 days, OR overdue (regardless of how long), OR marked done recently
+      if (diff !== null && (diff <= 14 || diff < 0 || isDone)) {
         allTests.push({ id, p, clinic, label:'OGTT 6 Minggu', date:d6w, diff, key, st, isDone, zone:colorZone(d6w,isDone) });
       }
     }
@@ -2363,12 +2388,12 @@ function renderReminder() {
     [1,2,3,4].forEach((mul,i) => {
       const yr = YEARS[i];
       const dt = addDaysKelantan(p.tarikhBersalin, 365*mul);
-      if (dt && !p.ujianTahunan?.[yr]) {
+      if (dt && !hasYearlyResult(p.ujianTahunan?.[yr])) {
         const diff = diffDays(dt);
-        if (diff !== null && diff <= 14) {
-          const key = `${id}_yr${yr}`;
-          const st = p.reminderStatus?.[key] || {};
-          const isDone = st.status === 'Selesai Ambil Darah';
+        const key = `${id}_yr${yr}`;
+        const st = p.reminderStatus?.[key] || {};
+        const isDone = st.status === 'Selesai Ambil Darah';
+        if (diff !== null && (diff <= 14 || diff < 0 || isDone)) {
           allTests.push({ id, p, clinic, label:`Ujian Tahunan ${yr}`, date:dt, diff, key, st, isDone, zone:colorZone(dt,isDone) });
         }
       }
@@ -2453,10 +2478,10 @@ function updateReminderBadge(n) {
     Object.values(patients).forEach(p => {
       if (!p.tarikhBersalin) return;
       const d6w = addDaysKelantan(p.tarikhBersalin, 42);
-      if (d6w && !p.ogtt6w) { const d=diffDays(d6w); if (d!==null&&d<=7&&d>=0) n++; }
+      if (d6w && !hasOgttResult(p.ogtt6w)) { const d=diffDays(d6w); if (d!==null&&d<=7&&d>=0) n++; }
       [1,2,3,4].forEach((mul,i) => {
         const dt = addDaysKelantan(p.tarikhBersalin, 365*mul);
-        if (dt && !p.ujianTahunan?.[YEARS[i]]) { const d=diffDays(dt); if (d!==null&&d<=7&&d>=0) n++; }
+        if (dt && !hasYearlyResult(p.ujianTahunan?.[YEARS[i]])) { const d=diffDays(dt); if (d!==null&&d<=7&&d>=0) n++; }
       });
     });
   }
@@ -2466,13 +2491,13 @@ function updateReminderBadge(n) {
 /* ── RENDER DASHBOARD ───────────────────────────────────── */
 function renderDashboard() {
   const pl = Object.values(patients), tot = pl.length;
-  const getR6 = p => p.ogtt6w ? ogttRes(p.ogtt6w.fasting,p.ogtt6w.postprandial) : null;
+  const getR6 = p => hasOgttResult(p.ogtt6w) ? ogttRes(p.ogtt6w.fasting,p.ogtt6w.postprandial) : null;
 
   const normal = pl.filter(p=>getR6(p)==='Normal').length;
   const pred   = pl.filter(p=>{ const r=getR6(p); return r&&r!=='T2DM'&&r!=='Normal'; }).length;
   const t2dm   = pl.filter(p=>getR6(p)==='T2DM').length;
-  const pend   = pl.filter(p=>!p.ogtt6w).length;
-  const urg    = pl.filter(p=>{ const d=diffDays(addDaysKelantan(p.tarikhBersalin,42)); return d!==null&&d<=7&&d>=0&&!p.ogtt6w; }).length;
+  const pend   = pl.filter(p=>!hasOgttResult(p.ogtt6w)).length;
+  const urg    = pl.filter(p=>{ const d=diffDays(addDaysKelantan(p.tarikhBersalin,42)); return d!==null&&d<=7&&d>=0&&!hasOgttResult(p.ogtt6w); }).length;
 
   document.getElementById('kpi-total').textContent   = tot;
   document.getElementById('kpi-normal').textContent  = normal;
@@ -2500,7 +2525,7 @@ function renderDashboard() {
 
   const YEARS=['2027','2028','2029','2030'];
   document.getElementById('ch-yearly').innerHTML = YEARS.map(yr=>{
-    const yp = pl.filter(p=>p.ujianTahunan?.[yr]);
+    const yp = pl.filter(p=>hasYearlyResult(p.ujianTahunan?.[yr]));
     const getYrResD = (yd) => yd?.jenis === 'OGTT' ? ogttRes(yd.ogttFasting, yd.ogttPost) : yrRes(yd?.jenis, yd?.nilai);
     const yn = yp.filter(p=>getYrResD(p.ujianTahunan[yr])==='Normal').length;
     const yt = yp.filter(p=>getYrResD(p.ujianTahunan[yr])==='T2DM').length;
