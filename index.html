@@ -2229,11 +2229,16 @@ window.renderLL = () => {
     const remStatus = p.reminderStatus?.[`${id}_ogtt6w`]?.status;
     const isDone   = remStatus === 'Selesai Ambil Darah';
     const needsCall = !r6 && !isDone && diff !== null;
-    const urg = needsCall && diff <= 7 && diff >= 0;
+    const urg     = needsCall && diff <= 7 && diff >= 0;
     const overdue = needsCall && diff < 0;
     let rowBg = '';
-    if (overdue) rowBg = 'background:#fef2f2';
-    else if (urg) rowBg = 'background:#fffbeb';
+    if (overdue) rowBg = 'background:#fff0f0;';
+    else if (urg) rowBg = 'background:#fffbeb;';
+    const overdueTag = overdue
+      ? `<span class="tag tag-t2dm" style="font-size:10px;display:inline-flex;align-items:center;gap:3px">🚨 ${Math.abs(diff)} hari overdue</span>`
+      : urg
+        ? `<span class="tag tag-urgent" style="font-size:10px">⚠️ ${diff===0?'Hari ini!':diff+' hari lagi'}</span>`
+        : '';
     return `<tr style="${rowBg}">
       <td class="muted">${++n}</td>
       <td>
@@ -2243,8 +2248,8 @@ window.renderLL = () => {
       <td class="muted" style="font-size:12px">${clinic.nama||'—'}</td>
       <td style="font-size:12px">${fmt(p.tarikhBersalin)}</td>
       <td>
-        <div style="font-size:12px">${fmt(d6w)}</div>
-        ${overdue?`<span class="tag tag-t2dm" style="font-size:10px">🚨 ${Math.abs(diff)}h overdue</span>`:urg?`<span class="tag tag-urgent" style="font-size:10px">⚠️ ${diff===0?'Hari ini!':diff+'h lagi'}</span>`:''}
+        <div style="font-size:12px">${fmt(d6w)} <span class="muted" style="font-size:10px">(${dayName(d6w)})</span></div>
+        ${overdueTag}
       </td>
       <td>${r6?mkTag(r6):mkTag(null)}</td>
       <td>${r27?mkTag(r27):'<span class="muted">—</span>'}</td>
@@ -2367,69 +2372,106 @@ window.renderReminder = function renderReminder() {
     'Selesai Ambil Darah'
   ];
 
-  // Build list of all upcoming/overdue tests
+  // ── Build all tests: NO time limit for overdue, 14-day window for upcoming ──
   const allTests = [];
   Object.entries(patients).forEach(([id,p]) => {
     if (!p.tarikhBersalin) return;
     const clinic = clinics[p.klinikId]||{};
-    // OGTT 6w
+
+    // OGTT 6 weeks
     const d6w = addDaysKelantan(p.tarikhBersalin, 42);
     if (d6w && !hasOgttResult(p.ogtt6w)) {
       const diff = diffDays(d6w);
+      if (diff === null) return;
       const key = `${id}_ogtt6w`;
       const st = p.reminderStatus?.[key] || {};
       const isDone = st.status === 'Selesai Ambil Darah';
-      // Include if: upcoming within 14 days, OR overdue (regardless of how long), OR marked done recently
-      if (diff !== null && (diff <= 14 || diff < 0 || isDone)) {
+      // ALWAYS include overdue (diff < 0) — no time limit
+      // Include upcoming only within 14 days
+      // Include done items too so staff can see them
+      if (diff < 0 || diff <= 14 || isDone) {
         allTests.push({ id, p, clinic, label:'OGTT 6 Minggu', date:d6w, diff, key, st, isDone, zone:colorZone(d6w,isDone) });
       }
     }
-    // Yearly
+
+    // Yearly tests 2027–2030
     [1,2,3,4].forEach((mul,i) => {
       const yr = YEARS[i];
       const dt = addDaysKelantan(p.tarikhBersalin, 365*mul);
-      if (dt && !hasYearlyResult(p.ujianTahunan?.[yr])) {
-        const diff = diffDays(dt);
-        const key = `${id}_yr${yr}`;
-        const st = p.reminderStatus?.[key] || {};
-        const isDone = st.status === 'Selesai Ambil Darah';
-        if (diff !== null && (diff <= 14 || diff < 0 || isDone)) {
-          allTests.push({ id, p, clinic, label:`Ujian Tahunan ${yr}`, date:dt, diff, key, st, isDone, zone:colorZone(dt,isDone) });
-        }
+      if (!dt || hasYearlyResult(p.ujianTahunan?.[yr])) return;
+      const diff = diffDays(dt);
+      if (diff === null) return;
+      const key = `${id}_yr${yr}`;
+      const st = p.reminderStatus?.[key] || {};
+      const isDone = st.status === 'Selesai Ambil Darah';
+      if (diff < 0 || diff <= 14 || isDone) {
+        allTests.push({ id, p, clinic, label:`Ujian Tahunan ${yr}`, date:dt, diff, key, st, isDone, zone:colorZone(dt,isDone) });
       }
     });
   });
 
-  // Sort: darkred first, then red, orange, green, done
-  const zoneOrder = { darkred:0, red:1, orange:2, green:3, done:4, neutral:5 };
-  allTests.sort((a,b) => (zoneOrder[a.zone]||9) - (zoneOrder[b.zone]||9) || a.diff - b.diff);
+  // ── Sort: overdue (most overdue first) → upcoming (soonest first) → done ──
+  // Overdue: diff < 0, sort ascending (most negative = longest overdue = first)
+  // Upcoming: diff >= 0, sort ascending (smallest = soonest = first)
+  // Done: last
+  allTests.sort((a, b) => {
+    const zoneOrder = { darkred:0, red:1, orange:2, green:3, done:4, neutral:5 };
+    const za = zoneOrder[a.zone] ?? 9;
+    const zb = zoneOrder[b.zone] ?? 9;
+    if (za !== zb) return za - zb;
+    // Within same zone: sort ascending by diff (most overdue first for negatives, soonest first for positives)
+    return a.diff - b.diff;
+  });
 
   // Apply filter
   const filterVal = document.getElementById('rem-filter')?.value || 'all';
   const filtered = filterVal === 'all' ? allTests : allTests.filter(t => t.zone === filterVal);
 
-  updateReminderBadge(allTests.filter(t=>!t.isDone && t.diff <= 7).length);
+  // Badge counts all overdue + upcoming ≤7 days (not done)
+  const urgentCount = allTests.filter(t => !t.isDone && t.diff <= 7).length;
+  updateReminderBadge(urgentCount);
 
   if (!filtered.length) {
-    container.innerHTML = `<div class="card"><div class="empty"><div class="eico">${filterVal==='all'?'✅':'🔍'}</div><p>${filterVal==='all'?'Tiada temujanji yang dekat buat masa ini':'Tiada rekod untuk kategori ini'}</p><div class="muted">${filterVal==='all'?'Pesakit dengan tarikh ujian dalam 14 hari akan dipaparkan di sini':'Cuba pilih kategori lain dari filter di atas'}</div></div></div>`;
+    const msgs = {
+      all:     ['✅', 'Tiada temujanji perlu diambil tindakan', 'Semua ujian dalam kawalan — tiada kes overdue atau menghampiri'],
+      darkred: ['🚨', 'Tiada kes overdue', 'Semua pesakit hadir tepat pada masanya'],
+      red:     ['⏰', 'Tiada temujanji hari ini atau esok', 'Tiada panggilan segera diperlukan'],
+      orange:  ['🟠', 'Tiada temujanji dalam 2–7 hari', 'Tiada panggilan yang perlu dijadualkan minggu ini'],
+      green:   ['🟢', 'Tiada temujanji dalam 8–14 hari', 'Tiada pesakit dalam zon selamat buat masa ini'],
+      done:    ['✅', 'Tiada kes yang ditanda selesai', 'Tandakan status "Selesai Ambil Darah" untuk melihatnya di sini'],
+    };
+    const [ico, title, sub] = msgs[filterVal] || msgs.all;
+    container.innerHTML = `<div class="card"><div class="empty"><div class="eico">${ico}</div><p>${title}</p><div class="muted">${sub}</div></div></div>`;
     return;
   }
 
   container.innerHTML = filtered.map((t,i) => {
     const curStatus = t.st.status || 'Belum Dihubungi';
     const curRemark = t.st.remark || '';
-    const diffLabel = t.diff < 0 ? `🚨 ${Math.abs(t.diff)} HARI TERLEPAS` : t.diff === 0 ? '⚠️ HARI INI' : t.diff === 1 ? '⚠️ ESOK' : t.diff <= 7 ? `🟠 ${t.diff} hari lagi` : `🟢 ${t.diff} hari lagi`;
+    const absDiff = Math.abs(t.diff);
+    const diffLabel = t.diff < 0
+      ? `🚨 OVERDUE ${absDiff} HARI`
+      : t.diff === 0 ? '⚠️ HARI INI'
+      : t.diff === 1 ? '⚠️ ESOK'
+      : t.diff <= 7  ? `🟠 ${t.diff} hari lagi`
+      : `🟢 ${t.diff} hari lagi`;
     const dotClass = t.zone === 'done' ? 'done' : t.zone;
 
     return `
       <div class="rem-row zone-${t.zone}">
+        ${t.zone === 'darkred' ? `
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:6px 10px;background:rgba(239,68,68,.2);border-radius:8px;border:1px solid rgba(239,68,68,.3)">
+            <span style="font-size:16px">🚨</span>
+            <span style="font-weight:800;font-size:12px;letter-spacing:.5px;text-transform:uppercase">OVERDUE — ${absDiff} HARI TERLEPAS</span>
+          </div>
+        ` : ''}
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
           <div style="flex:1;min-width:200px">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
               <span class="zone-dot ${dotClass}"></span>
               <span style="font-weight:800;font-size:14px">${t.p.nama||'—'}</span>
             </div>
-            <div style="font-size:11px;color:var(--g500);display:flex;gap:8px;flex-wrap:wrap">
+            <div style="font-size:11px;display:flex;gap:8px;flex-wrap:wrap">
               <span class="mono">${t.p.ic||'—'}</span>
               <span>☎️ ${t.p.tel||'—'}</span>
               <span>🏥 ${t.clinic.nama||'—'}</span>
@@ -2438,21 +2480,21 @@ window.renderReminder = function renderReminder() {
           <button class="btn btn-primary btn-sm" onclick="openDetail('${t.id}')" style="flex-shrink:0">📋 Rekod</button>
         </div>
 
-        <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;align-items:center">
-          <div style="background:rgba(255,255,255,.6);border-radius:10px;padding:8px 12px;font-size:12px;min-width:180px">
-            <div style="font-weight:800;color:var(--navy);margin-bottom:2px">${t.label}</div>
-            <div>📅 ${fmt(t.date)} <span style="color:var(--g400)">(${dayName(t.date)})</span></div>
-            <div style="font-weight:700;margin-top:2px">${diffLabel}</div>
+        <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;align-items:flex-start">
+          <div style="background:rgba(255,255,255,.6);border-radius:10px;padding:8px 12px;font-size:12px;min-width:200px">
+            <div style="font-weight:800;margin-bottom:4px">${t.label}</div>
+            <div style="margin-bottom:2px">📅 ${fmt(t.date)} <span style="opacity:.7">(${dayName(t.date)})</span></div>
+            <div style="font-weight:800;font-size:13px">${diffLabel}</div>
           </div>
           <div style="flex:1;min-width:200px">
             <div style="margin-bottom:6px">
-              <div style="font-size:10px;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Status Tindakan</div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;opacity:.7">Status Tindakan</div>
               <select class="status-select" onchange="saveRemStatus('${t.id}','${t.key}','status',this.value)">
                 ${STATUS_OPTIONS.map(s=>`<option ${curStatus===s?'selected':''}>${s}</option>`).join('')}
               </select>
             </div>
             <div>
-              <div style="font-size:10px;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Catatan Staf</div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;opacity:.7">Catatan Staf</div>
               <input class="remark-input" placeholder="cth: Pesakit ada kenduri, datang minggu depan" value="${curRemark.replace(/"/g,'&quot;')}" onblur="saveRemStatus('${t.id}','${t.key}','remark',this.value)">
             </div>
           </div>
