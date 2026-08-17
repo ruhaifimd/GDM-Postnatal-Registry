@@ -561,8 +561,39 @@ tr:hover td { background: rgba(13,115,119,.02); }
       <button class="auth-btn" id="login-btn" onclick="doLogin()">
         <span id="login-btn-text">Log Masuk</span>
       </button>
-      <div style="margin-top:14px;text-align:center;font-size:11px;color:var(--g400)">
+      <div style="margin-top:12px;text-align:center">
+        <button type="button" onclick="switchAuthMode('forgot')" style="background:none;border:none;color:var(--teal);font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px">🔑 Lupa Kata Laluan?</button>
+      </div>
+      <div style="margin-top:10px;text-align:center;font-size:11px;color:var(--g400)">
         🔒 Sistem Tertutup · Akses Terhad Kakitangan Kesihatan Sahaja
+      </div>
+    </div>
+
+    <!-- ── FORGOT PASSWORD ── -->
+    <div class="auth-body" id="auth-forgot-panel" style="display:none">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:32px">🔑</div>
+        <div style="font-size:15px;font-weight:800;color:var(--navy);margin-top:6px">Set Semula Kata Laluan</div>
+        <div style="font-size:12px;color:var(--g500);margin-top:4px;line-height:1.5">Masukkan e-mel anda. Pautan set semula kata laluan akan dihantar oleh Firebase ke e-mel tersebut.</div>
+      </div>
+      <div class="auth-error" id="forgot-error"></div>
+      <div id="forgot-success" style="display:none;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 14px;font-size:12px;color:#166534;margin-bottom:14px;text-align:center">
+        <div style="font-size:18px;margin-bottom:4px">📧</div>
+        <div style="font-weight:800">E-mel dihantar!</div>
+        <div style="margin-top:4px" id="forgot-sent-email"></div>
+        <div style="margin-top:6px;font-size:11px;color:#16a34a">Semak inbox (dan folder Spam) anda. Pautan sah selama 1 jam.</div>
+      </div>
+      <div id="forgot-form">
+        <div class="form-group">
+          <label class="form-label">E-mel Organisasi *</label>
+          <input class="form-control" id="forgot-email" type="email" placeholder="nama@moh.gov.my" autocomplete="email">
+        </div>
+        <button class="auth-btn" id="forgot-btn" onclick="doForgotPassword()">
+          <span id="forgot-btn-text">📧 Hantar Pautan Set Semula</span>
+        </button>
+      </div>
+      <div style="margin-top:12px;text-align:center">
+        <button type="button" onclick="switchAuthMode('login')" style="background:none;border:none;color:var(--teal);font-size:12px;font-weight:600;cursor:pointer">← Kembali ke Log Masuk</button>
       </div>
     </div>
 
@@ -1002,7 +1033,7 @@ import { initializeApp }
   from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
   getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  signOut, onAuthStateChanged
+  signOut, onAuthStateChanged, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import {
   getDatabase, ref, push, get, set, update, remove, onValue
@@ -1158,22 +1189,74 @@ window.selectRole = r => {
 };
 
 window.switchAuthMode = async mode => {
-  const isLogin = mode === 'login';
-  document.getElementById('auth-login-panel').style.display  = isLogin ? '' : 'none';
-  document.getElementById('auth-signup-panel').style.display = isLogin ? 'none' : '';
-  document.getElementById('amode-login').classList.toggle('active',  isLogin);
-  document.getElementById('amode-signup').classList.toggle('active', !isLogin);
-  hideErr();
-  document.getElementById('signup-error').classList.remove('show');
+  const panels = ['auth-login-panel','auth-signup-panel','auth-bootstrap-panel','auth-forgot-panel'];
+  panels.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
 
-  // When switching to signup, load clinics for PIC dropdown
-  if (!isLogin) {
+  // Tab bar visibility
+  const modeBar = document.getElementById('auth-mode-bar');
+  if (modeBar) modeBar.style.display = (mode === 'login' || mode === 'signup') ? '' : 'none';
+
+  document.getElementById('amode-login')?.classList.toggle('active', mode === 'login');
+  document.getElementById('amode-signup')?.classList.toggle('active', mode === 'signup');
+  hideErr();
+  document.getElementById('signup-error')?.classList.remove('show');
+  document.getElementById('forgot-error')?.classList.remove('show');
+
+  if (mode === 'login') {
+    document.getElementById('auth-login-panel').style.display = '';
+  } else if (mode === 'signup') {
+    document.getElementById('auth-signup-panel').style.display = '';
+    // Load clinics for PIC dropdown
     try {
       const snap = await get(ref(db, 'klinik'));
       clinics = snap.val() || {};
-      // If user is in PIC mode, refresh dropdown
       if (signupRole === 'pic') selectSuRole('pic');
-    } catch(e) { /* fail silently — only matters for PIC */ }
+    } catch(e) {}
+  } else if (mode === 'forgot') {
+    document.getElementById('auth-forgot-panel').style.display = '';
+    // Pre-fill email if user already typed one in login
+    const loginEmail = document.getElementById('auth-email')?.value;
+    if (loginEmail) document.getElementById('forgot-email').value = loginEmail;
+    // Reset form state
+    document.getElementById('forgot-form').style.display = '';
+    document.getElementById('forgot-success').style.display = 'none';
+  }
+};
+
+window.doForgotPassword = async () => {
+  const errEl  = document.getElementById('forgot-error');
+  const succEl = document.getElementById('forgot-success');
+  errEl.classList.remove('show');
+  succEl.style.display = 'none';
+
+  const email = document.getElementById('forgot-email').value.trim().toLowerCase();
+  if (!email) { errEl.textContent = 'Sila masukkan e-mel anda.'; errEl.classList.add('show'); return; }
+
+  const btn = document.getElementById('forgot-btn');
+  btn.disabled = true;
+  document.getElementById('forgot-btn-text').textContent = '⏳ Menghantar…';
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    // Success — show success message, hide form
+    document.getElementById('forgot-form').style.display = 'none';
+    document.getElementById('forgot-sent-email').textContent = `E-mel set semula dihantar ke: ${email}`;
+    succEl.style.display = 'block';
+    toast('📧 E-mel set semula kata laluan dihantar!', 4000);
+  } catch(e) {
+    let msg = 'Ralat tidak diketahui. Cuba lagi.';
+    if (e.code === 'auth/user-not-found')    msg = 'E-mel ini tidak didaftarkan dalam sistem.';
+    if (e.code === 'auth/invalid-email')     msg = 'Format e-mel tidak sah.';
+    if (e.code === 'auth/too-many-requests') msg = 'Terlalu banyak percubaan. Sila cuba lagi sebentar.';
+    if (e.code === 'auth/network-request-failed') msg = 'Sambungan Internet bermasalah. Cuba lagi.';
+    errEl.textContent = msg;
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    document.getElementById('forgot-btn-text').textContent = '📧 Hantar Pautan Set Semula';
   }
 };
 
