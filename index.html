@@ -169,7 +169,7 @@ input, select, textarea, button { font-family: var(--font); }
 /* ═══════════════════════════════════════════════════════
    APP SHELL
 ═══════════════════════════════════════════════════════ */
-#app { display: none; }
+#app { display: block; }
 #app.visible { display: block; }
 
 /* TOPBAR */
@@ -477,202 +477,6 @@ tr:hover td { background: rgba(13,115,119,.02); }
 <body>
 
 <!-- ═══════════════════════════════════════════════════════
-     AUTH SCREEN
-═══════════════════════════════════════════════════════ -->
-<div id="auth-screen">
-  <div class="auth-dots"></div>
-  <div class="auth-card">
-    <div class="auth-header">
-      <div class="auth-logo">
-        <svg viewBox="0 0 48 48" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="24" cy="18" r="8" stroke="white" stroke-width="2.5" fill="none"/>
-          <path d="M24 10 C24 10 26 14 24 18 C22 14 24 10 24 10Z" fill="rgba(255,255,255,.5)"/>
-          <path d="M14 38 C14 30 18 26 24 26 C30 26 34 30 34 38" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-          <path d="M20 34 L24 38 L28 34" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          <circle cx="37" cy="12" r="6" fill="rgba(255,255,255,.15)" stroke="white" stroke-width="1.5"/>
-          <path d="M37 9.5V14.5M34.5 12H39.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <div class="auth-title">GDM Postnatal e-Registry</div>
-      <div class="auth-sub">Pejabat Kesihatan Daerah Tumpat, Kelantan</div>
-    </div>
-    <!-- Auth mode switcher -->
-    <div class="auth-mode-bar" id="auth-mode-bar">
-      <button class="auth-mode-btn active" id="amode-login" onclick="switchAuthMode('login')">Log Masuk</button>
-      <button class="auth-mode-btn" id="amode-signup" onclick="switchAuthMode('signup')">Daftar Akaun</button>
-    </div>
-
-    <!-- ── BOOTSTRAP (first-time setup) ── -->
-    <div class="auth-body" id="auth-bootstrap-panel" style="display:none">
-      <div style="text-align:center;margin-bottom:16px">
-        <div style="width:56px;height:56px;margin:0 auto;background:linear-gradient(135deg,#22d3b0,#0d7377);border-radius:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(13,115,119,.3)">
-          <svg viewBox="0 0 48 48" width="30" height="30" fill="none"><circle cx="24" cy="18" r="8" stroke="white" stroke-width="2.5"/><path d="M24 10C24 10 26 14 24 18C22 14 24 10 24 10Z" fill="rgba(255,255,255,.5)"/><path d="M14 38C14 30 18 26 24 26C30 26 34 30 34 38" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="37" cy="12" r="6" fill="rgba(255,255,255,.15)" stroke="white" stroke-width="1.5"/><path d="M37 9.5V14.5M34.5 12H39.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </div>
-        <div style="font-size:16px;font-weight:800;color:var(--navy);margin-top:8px">Persediaan Pertama</div>
-        <div style="font-size:12px;color:var(--g500);margin-top:4px;line-height:1.5">Tiada akaun dalam sistem lagi. Cipta akaun Admin pertama untuk mula menggunakan aplikasi.</div>
-      </div>
-      <div class="auth-error" id="bs-error"></div>
-      <div class="form-group">
-        <label class="form-label">Nama Penuh *</label>
-        <input class="form-control" id="bs-nama" value="Dr. Muhammad Ruhaifi" placeholder="Nama penuh">
-      </div>
-      <div class="form-group">
-        <label class="form-label">E-mel Organisasi * <span style="color:var(--green);font-size:10px">@moh.gov.my</span></label>
-        <input class="form-control" id="bs-email" type="email" value="drruhaifi@moh.gov.my" placeholder="nama@moh.gov.my">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Kata Laluan *</label>
-        <input class="form-control" id="bs-pass" type="password" value="abcd1234" placeholder="Min. 6 aksara">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Jawatan</label>
-        <input class="form-control" id="bs-jawatan" value="Medical Officer (UD41)" placeholder="cth: MO / Pegawai Perubatan">
-      </div>
-      <button class="auth-btn" id="bs-btn" onclick="doBootstrap()">
-        <span id="bs-btn-text">🚀 Cipta Akaun Admin & Mula</span>
-      </button>
-      <div style="margin-top:12px;text-align:center;font-size:10px;color:var(--g400)">
-        ℹ️ Borang ini hanya muncul sekali — apabila sistem belum mempunyai sebarang akaun.
-      </div>
-    </div>
-
-    <!-- ── LOGIN ── -->
-    <div class="auth-body" id="auth-login-panel">
-      <div class="auth-role-tabs">
-        <div class="auth-role-btn active" id="rb-super" onclick="selectRole('super')">
-          <span class="role-icon"><svg viewBox="0 0 32 32" width="24" height="24" fill="none"><circle cx="16" cy="11" r="5" stroke="currentColor" stroke-width="2"/><path d="M8 27c0-5 4-8 8-8s8 3 8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M22 8l2-3 2 3M23 5v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>Admin
-        </div>
-        <div class="auth-role-btn" id="rb-pic" onclick="selectRole('pic')">
-          <span class="role-icon"><svg viewBox="0 0 32 32" width="24" height="24" fill="none"><rect x="6" y="8" width="20" height="18" rx="3" stroke="currentColor" stroke-width="2"/><path d="M6 14h20" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="21" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M13 8V5a3 3 0 016 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>PIC Klinik
-        </div>
-      </div>
-      <div class="auth-error" id="auth-error"></div>
-      <div class="form-group">
-        <label class="form-label">E-mel Organisasi</label>
-        <input class="form-control" id="auth-email" type="email" placeholder="nama@moh.gov.my" autocomplete="email">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Kata Laluan</label>
-        <div style="position:relative">
-          <input class="form-control" id="auth-pass" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:42px">
-          <button type="button" onclick="togglePw('auth-pass','eye-login')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--g400);font-size:16px" id="eye-login">👁</button>
-        </div>
-      </div>
-      <button class="auth-btn" id="login-btn" onclick="doLogin()">
-        <span id="login-btn-text">Log Masuk</span>
-      </button>
-      <div style="margin-top:12px;text-align:center">
-        <button type="button" onclick="switchAuthMode('forgot')" style="background:none;border:none;color:var(--teal);font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px">🔑 Lupa Kata Laluan?</button>
-      </div>
-      <div style="margin-top:10px;text-align:center;font-size:11px;color:var(--g400)">
-        🔒 Sistem Tertutup · Akses Terhad Kakitangan Kesihatan Sahaja
-      </div>
-    </div>
-
-    <!-- ── FORGOT PASSWORD ── -->
-    <div class="auth-body" id="auth-forgot-panel" style="display:none">
-      <div style="text-align:center;margin-bottom:16px">
-        <div style="font-size:32px">🔑</div>
-        <div style="font-size:15px;font-weight:800;color:var(--navy);margin-top:6px">Set Semula Kata Laluan</div>
-        <div style="font-size:12px;color:var(--g500);margin-top:4px;line-height:1.5">Masukkan e-mel anda. Pautan set semula kata laluan akan dihantar oleh Firebase ke e-mel tersebut.</div>
-      </div>
-      <div class="auth-error" id="forgot-error"></div>
-      <div id="forgot-success" style="display:none;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 14px;font-size:12px;color:#166534;margin-bottom:14px;text-align:center">
-        <div style="font-size:18px;margin-bottom:4px">📧</div>
-        <div style="font-weight:800">E-mel dihantar!</div>
-        <div style="margin-top:4px" id="forgot-sent-email"></div>
-        <div style="margin-top:6px;font-size:11px;color:#16a34a">Semak inbox (dan folder Spam) anda. Pautan sah selama 1 jam.</div>
-      </div>
-      <div id="forgot-form">
-        <div class="form-group">
-          <label class="form-label">E-mel Organisasi *</label>
-          <input class="form-control" id="forgot-email" type="email" placeholder="nama@moh.gov.my" autocomplete="email">
-        </div>
-        <button class="auth-btn" id="forgot-btn" onclick="doForgotPassword()">
-          <span id="forgot-btn-text">📧 Hantar Pautan Set Semula</span>
-        </button>
-      </div>
-      <div style="margin-top:12px;text-align:center">
-        <button type="button" onclick="switchAuthMode('login')" style="background:none;border:none;color:var(--teal);font-size:12px;font-weight:600;cursor:pointer">← Kembali ke Log Masuk</button>
-      </div>
-    </div>
-
-    <!-- ── SIGN UP ── -->
-    <div class="auth-body" id="auth-signup-panel" style="display:none">
-      <div class="auth-signup-notice">
-        <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:4px">📋 Pendaftaran Akaun Baharu</div>
-        <div style="font-size:11px;color:var(--g600);line-height:1.5">Hanya kakitangan dengan e-mel <b style="color:var(--green)">@moh.gov.my</b> dibenarkan mendaftar. Akaun PIC Klinik perlu pengesahan Admin sebelum aktif.</div>
-      </div>
-
-      <!-- Role selector for signup -->
-      <div class="auth-role-tabs" style="margin-bottom:16px">
-        <div class="auth-role-btn active" id="su-rb-super" onclick="selectSuRole('super')">
-          <span class="role-icon"><svg viewBox="0 0 32 32" width="24" height="24" fill="none"><circle cx="16" cy="11" r="5" stroke="currentColor" stroke-width="2"/><path d="M8 27c0-5 4-8 8-8s8 3 8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M22 8l2-3 2 3M23 5v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>Admin
-        </div>
-        <div class="auth-role-btn" id="su-rb-pic" onclick="selectSuRole('pic')">
-          <span class="role-icon"><svg viewBox="0 0 32 32" width="24" height="24" fill="none"><rect x="6" y="8" width="20" height="18" rx="3" stroke="currentColor" stroke-width="2"/><path d="M6 14h20" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="21" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M13 8V5a3 3 0 016 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>PIC Klinik
-        </div>
-      </div>
-
-      <div class="auth-error" id="signup-error"></div>
-
-      <div class="form-group">
-        <label class="form-label">Nama Penuh *</label>
-        <input class="form-control" id="su-nama" placeholder="Nama penuh seperti dalam kad pengenalan">
-      </div>
-      <div class="form-group">
-        <label class="form-label">E-mel Organisasi * <span style="color:var(--green);font-weight:600;font-size:10px;margin-left:4px">@moh.gov.my sahaja</span></label>
-        <input class="form-control" id="su-email" type="email" placeholder="nama@moh.gov.my" autocomplete="email">
-      </div>
-      <div class="form-group" id="su-pic-clinic-wrap" style="display:none">
-        <label class="form-label">Klinik (PIC) *</label>
-        <input class="form-control" id="su-klinik" placeholder="cth: KK Wakaf Bharu">
-      </div>
-      <div class="form-row fr-2">
-        <div class="form-group">
-          <label class="form-label">Jawatan</label>
-          <input class="form-control" id="su-jawatan" placeholder="cth: MO / Jururawat">
-        </div>
-        <div class="form-group">
-          <label class="form-label">No. Telefon</label>
-          <input class="form-control" id="su-tel" placeholder="01X-XXXXXXX">
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Kata Laluan * <span style="color:var(--g400);font-weight:400;font-size:10px">(Min. 6 aksara)</span></label>
-        <div style="position:relative">
-          <input class="form-control" id="su-pass" type="password" placeholder="Cipta kata laluan" style="padding-right:42px" oninput="checkPwStrength()">
-          <button type="button" onclick="togglePw('su-pass','eye-su')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--g400);font-size:16px" id="eye-su">👁</button>
-        </div>
-        <div id="pw-strength-bar" style="margin-top:6px;height:4px;border-radius:99px;background:var(--g200);overflow:hidden;display:none">
-          <div id="pw-strength-fill" style="height:100%;border-radius:99px;transition:width .3s,background .3s;width:0%"></div>
-        </div>
-        <div id="pw-strength-lbl" style="font-size:10px;margin-top:4px;color:var(--g400)"></div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Sahkan Kata Laluan *</label>
-        <input class="form-control" id="su-pass2" type="password" placeholder="Ulang kata laluan">
-      </div>
-
-      <!-- Invite code only for Admin role -->
-      <div class="form-group" id="su-code-wrap">
-        <label class="form-label">Kod Jemputan Admin *
-          <span style="color:var(--g400);font-weight:400;font-size:10px;margin-left:4px">Hubungi PKD Tumpat untuk kod</span>
-        </label>
-        <input class="form-control" id="su-code" placeholder="Masukkan kod jemputan" autocomplete="off">
-      </div>
-
-      <button class="auth-btn" id="signup-btn" onclick="doSignUp()">
-        <span id="signup-btn-text">Daftar Akaun Admin</span>
-      </button>
-      <div style="margin-top:10px;text-align:center">
-        <button type="button" onclick="switchAuthMode('login')" style="background:none;border:none;color:var(--teal);font-size:12px;font-weight:600;cursor:pointer">← Kembali ke Log Masuk</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════
      APP SHELL
 ═══════════════════════════════════════════════════════ -->
 <div id="app">
@@ -694,8 +498,6 @@ tr:hover td { background: rgba(13,115,119,.02); }
       </div>
     </div>
     <div class="topbar-right">
-      <div class="role-pill" id="role-pill"></div>
-      <button class="btn-logout" onclick="doLogout()">Log Keluar</button>
     </div>
   </div>
 
@@ -704,7 +506,7 @@ tr:hover td { background: rgba(13,115,119,.02); }
     <div class="nav-tab active" id="tab-dashboard" onclick="showPage('page-dashboard')">📊 Dashboard</div>
     <div class="nav-tab" id="tab-linelisting" onclick="showPage('page-linelisting')">📋 Linelisting</div>
     <div class="nav-tab" id="tab-reminder" onclick="showPage('page-reminder')">⚠️ Peringatan <span class="badge badge-red" id="badge-reminder" style="display:none">0</span></div>
-    <div class="nav-tab super-only" id="tab-admin" onclick="showPage('page-admin')">⚙️ Admin</div>
+    <div class="nav-tab" id="tab-admin" onclick="showPage('page-admin')">⚙️ Admin</div>
   </div>
 
   <!-- ─────────────────────────────────────────────
@@ -776,7 +578,7 @@ tr:hover td { background: rgba(13,115,119,.02); }
         <div class="card-title">📋 Senarai Pesakit <span class="badge" id="ll-count">0</span></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-primary btn-sm" onclick="openAddPatient()">+ Tambah Pesakit</button>
-          <button class="btn btn-ghost btn-sm super-only" id="btn-csv" onclick="downloadCSV()" style="display:none">⬇️ Muat Turun CSV</button>
+          <button class="btn btn-ghost btn-sm" id="btn-csv" onclick="downloadCSV()">⬇️ Muat Turun CSV</button>
         </div>
       </div>
       <div class="tbl-wrap">
@@ -832,7 +634,7 @@ tr:hover td { background: rgba(13,115,119,.02); }
   <!-- ─────────────────────────────────────────────
        PAGE: ADMIN (Admin sahaja)
   ───────────────────────────────────────────── -->
-  <div class="page super-only" id="page-admin">
+  <div class="page" id="page-admin">
     <!-- Tabs within admin -->
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       <button class="btn btn-primary" id="adm-tab-klinik" onclick="switchAdminTab('klinik')">🏥 Klinik</button>
@@ -1032,10 +834,6 @@ tr:hover td { background: rgba(13,115,119,.02); }
 import { initializeApp }
   from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
-  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  signOut, onAuthStateChanged, sendPasswordResetEmail
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import {
   getDatabase, ref, push, get, set, update, remove, onValue
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
@@ -1050,25 +848,15 @@ const fbApp = initializeApp({
   appId: "1:193423566089:web:84603dcb253cbdafbddfd8"
 });
 
-const auth = getAuth(fbApp);
-const db   = getDatabase(fbApp);
-
-/* EmailJS — plug in your own Service ID / Template ID / Public Key below  */
-const EJS = {
-  serviceId:  'service_gdm_pkd',   // ganti dengan ID anda
-  templateId: 'template_pic_welcome',
-  publicKey:  'YOUR_EMAILJS_PUBLIC_KEY' // ganti dengan Public Key anda
-};
+const db = getDatabase(fbApp);
 
 /* ── STATE ──────────────────────────────────────────────── */
-let currentUser  = null;  // { uid, email, role, klinikId, nama }
 let clinics   = {};
 let pics      = {};
 let patients  = {};
-let currentPID   = null;  // patient detail
-let currentRType = null;  // result type
-let editingPID   = null;  // editing patient
-let selectedRole = 'super';
+let currentPID   = null;
+let currentRType = null;
+let editingPID   = null;
 let adminTab     = 'klinik';
 
 /* ── HELPERS ────────────────────────────────────────────── */
@@ -1141,479 +929,24 @@ const toast = (msg, dur=2800) => {
   el.textContent = msg; el.style.display = 'block';
   clearTimeout(el._t); el._t = setTimeout(() => el.style.display = 'none', dur);
 };
-const showErr = msg => {
-  const el = document.getElementById('auth-error');
-  el.textContent = msg; el.classList.add('show');
-};
-const hideErr = () => document.getElementById('auth-error').classList.remove('show');
-const setBtn  = (id, txt, dis=false) => {
-  const b = document.getElementById(id);
-  if (b) { document.getElementById(id+'text') && (document.getElementById(id+'text').textContent = txt); b.disabled = dis; }
-};
-
-/* ── CPG DIAGNOSTIC ─────────────────────────────────────── */
-function ogttRes(f, p) {
-  const fv = parseFloat(f), pv = parseFloat(p);
-  const hf = !isNaN(fv), hp = !isNaN(pv);
-  if (!hf && !hp) return null;
-  if (fv >= 7.0 || pv >= 11.1) return 'T2DM';
-  if (hf && fv >= 6.1 && fv <= 6.9) return 'IFG / Prediabetes';
-  if (hp && pv >= 7.8 && pv <= 11.0) return 'IGT / Prediabetes';
-  if ((hf && fv < 6.1) || (hp && pv < 7.8)) return 'Normal';
-  return null;
-}
-function yrRes(jenis, nilai) {
-  const v = parseFloat(nilai);
-  if (isNaN(v)) return null;
-  if (jenis === 'FBS')   return v >= 7 ? 'T2DM' : v >= 6.1 ? 'IFG / Prediabetes' : 'Normal';
-  if (jenis === 'RBS')   return v >= 11.1 ? 'T2DM' : v >= 7.8 ? 'Berhati-hati – Ulang Ujian' : 'Normal';
-  if (jenis === 'OGTT')  return v >= 11.1 ? 'T2DM' : v >= 7.8 ? 'IGT / Prediabetes' : 'Normal';
-  if (jenis === 'HbA1c') return v >= 6.3 ? 'T2DM' : v >= 5.7 ? 'Prediabetes' : 'Normal';
-  return null;
-}
-function tagCls(k) {
-  if (!k) return 'tag-pending';
-  if (k === 'Normal') return 'tag-normal';
-  if (k === 'T2DM')   return 'tag-t2dm';
-  if (k.includes('Prediabetes') || k.includes('IFG') || k.includes('IGT')) return 'tag-pred';
-  if (k.includes('Berhati')) return 'tag-fail';
-  return 'tag-pending';
-}
-const mkTag = k => `<span class="tag ${tagCls(k)}">${k || 'Belum'}</span>`;
-
-/* ── AUTH FLOW ──────────────────────────────────────────── */
-window.selectRole = r => {
-  selectedRole = r;
-  document.getElementById('rb-super').classList.toggle('active', r === 'super');
-  document.getElementById('rb-pic').classList.toggle('active', r === 'pic');
-};
-
-window.switchAuthMode = async mode => {
-  const panels = ['auth-login-panel','auth-signup-panel','auth-bootstrap-panel','auth-forgot-panel'];
-  panels.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
-  });
-
-  // Tab bar visibility
-  const modeBar = document.getElementById('auth-mode-bar');
-  if (modeBar) modeBar.style.display = (mode === 'login' || mode === 'signup') ? '' : 'none';
-
-  document.getElementById('amode-login')?.classList.toggle('active', mode === 'login');
-  document.getElementById('amode-signup')?.classList.toggle('active', mode === 'signup');
-  hideErr();
-  document.getElementById('signup-error')?.classList.remove('show');
-  document.getElementById('forgot-error')?.classList.remove('show');
-
-  if (mode === 'login') {
-    document.getElementById('auth-login-panel').style.display = '';
-  } else if (mode === 'signup') {
-    document.getElementById('auth-signup-panel').style.display = '';
-    // Load clinics for PIC dropdown
-    try {
-      const snap = await get(ref(db, 'klinik'));
-      clinics = snap.val() || {};
-      if (signupRole === 'pic') selectSuRole('pic');
-    } catch(e) {}
-  } else if (mode === 'forgot') {
-    document.getElementById('auth-forgot-panel').style.display = '';
-    // Pre-fill email if user already typed one in login
-    const loginEmail = document.getElementById('auth-email')?.value;
-    if (loginEmail) document.getElementById('forgot-email').value = loginEmail;
-    // Reset form state
-    document.getElementById('forgot-form').style.display = '';
-    document.getElementById('forgot-success').style.display = 'none';
-  }
-};
-
-window.doForgotPassword = async () => {
-  const errEl  = document.getElementById('forgot-error');
-  const succEl = document.getElementById('forgot-success');
-  errEl.classList.remove('show');
-  succEl.style.display = 'none';
-
-  const email = document.getElementById('forgot-email').value.trim().toLowerCase();
-  if (!email) { errEl.textContent = 'Sila masukkan e-mel anda.'; errEl.classList.add('show'); return; }
-
-  const btn = document.getElementById('forgot-btn');
-  btn.disabled = true;
-  document.getElementById('forgot-btn-text').textContent = '⏳ Menghantar…';
-
-  try {
-    await sendPasswordResetEmail(auth, email);
-    // Success — show success message, hide form
-    document.getElementById('forgot-form').style.display = 'none';
-    document.getElementById('forgot-sent-email').textContent = `E-mel set semula dihantar ke: ${email}`;
-    succEl.style.display = 'block';
-    toast('📧 E-mel set semula kata laluan dihantar!', 4000);
-  } catch(e) {
-    let msg = 'Ralat tidak diketahui. Cuba lagi.';
-    if (e.code === 'auth/user-not-found')    msg = 'E-mel ini tidak didaftarkan dalam sistem.';
-    if (e.code === 'auth/invalid-email')     msg = 'Format e-mel tidak sah.';
-    if (e.code === 'auth/too-many-requests') msg = 'Terlalu banyak percubaan. Sila cuba lagi sebentar.';
-    if (e.code === 'auth/network-request-failed') msg = 'Sambungan Internet bermasalah. Cuba lagi.';
-    errEl.textContent = msg;
-    errEl.classList.add('show');
-  } finally {
-    btn.disabled = false;
-    document.getElementById('forgot-btn-text').textContent = '📧 Hantar Pautan Set Semula';
-  }
-};
-
-window.togglePw = (inputId, btnId) => {
-  const inp = document.getElementById(inputId);
-  const isText = inp.type === 'text';
-  inp.type = isText ? 'password' : 'text';
-  document.getElementById(btnId).textContent = isText ? '👁' : '🙈';
-};
-
-window.checkPwStrength = () => {
-  const pw = document.getElementById('su-pass').value;
-  const bar = document.getElementById('pw-strength-bar');
-  const fill= document.getElementById('pw-strength-fill');
-  const lbl = document.getElementById('pw-strength-lbl');
-  if (!pw) { bar.style.display='none'; lbl.textContent=''; return; }
-  bar.style.display = 'block';
-  let score = 0;
-  if (pw.length >= 6)  score++;
-  if (pw.length >= 10) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw)) score++;
-  if (/[^A-Za-z0-9]/.test(pw)) score++;
-  const levels = [
-    { pct:'20%', color:'#ef4444', txt:'Sangat Lemah' },
-    { pct:'40%', color:'#f97316', txt:'Lemah' },
-    { pct:'60%', color:'#eab308', txt:'Sederhana' },
-    { pct:'80%', color:'#22c55e', txt:'Kuat' },
-    { pct:'100%',color:'#16a34a', txt:'Sangat Kuat' },
-  ];
-  const lv = levels[Math.min(score-1, 4)] || levels[0];
-  fill.style.width = lv.pct; fill.style.background = lv.color;
-  lbl.textContent = lv.txt; lbl.style.color = lv.color;
-};
-
-// Invite code stored in Firebase at /config/inviteCode — Admin boleh tukar
-const FALLBACK_INVITE = 'PKDTUMPAT2025';
-const ALLOWED_DOMAIN  = 'moh.gov.my';
-let signupRole = 'super';   // 'super' (Admin) | 'pic'
-
-window.selectSuRole = role => {
-  signupRole = role;
-  document.getElementById('su-rb-super').classList.toggle('active', role === 'super');
-  document.getElementById('su-rb-pic').classList.toggle('active',   role === 'pic');
-
-  // Toggle PIC clinic field
-  document.getElementById('su-pic-clinic-wrap').style.display = role === 'pic' ? '' : 'none';
-  // Toggle invite code (Admin only)
-  document.getElementById('su-code-wrap').style.display = role === 'super' ? '' : 'none';
-  // Update button label
-  document.getElementById('signup-btn-text').textContent =
-    role === 'super' ? 'Daftar Akaun Admin' : 'Hantar Permohonan PIC';
-};
-
-// Validate organisational email domain
-function isValidOrgEmail(email) {
-  if (!email || !email.includes('@')) return false;
-  const domain = email.split('@')[1].toLowerCase().trim();
-  return domain === ALLOWED_DOMAIN;
-}
-
-window.doSignUp = async () => {
-  const errEl = document.getElementById('signup-error');
-  const showSuErr = msg => { errEl.textContent = msg; errEl.classList.add('show'); errEl.scrollIntoView({behavior:'smooth',block:'center'}); };
-  errEl.classList.remove('show');
-
-  const role  = signupRole;
-  const nama  = document.getElementById('su-nama').value.trim();
-  const email = document.getElementById('su-email').value.trim().toLowerCase();
-  const tel   = document.getElementById('su-tel').value.trim();
-  const jawatan = document.getElementById('su-jawatan').value.trim();
-  const pass  = document.getElementById('su-pass').value;
-  const pass2 = document.getElementById('su-pass2').value;
-  const code  = document.getElementById('su-code').value.trim();
-  const klinikInput = document.getElementById('su-klinik').value.trim();
-
-  // Common validations
-  if (!nama)  { showSuErr('Sila isi nama penuh.'); return; }
-  if (!email) { showSuErr('Sila isi e-mel organisasi.'); return; }
-  if (!isValidOrgEmail(email)) {
-    showSuErr(`E-mel mesti menggunakan domain organisasi @${ALLOWED_DOMAIN}. Pendaftaran ditolak.`);
-    return;
-  }
-  if (!pass || pass.length < 6) { showSuErr('Kata laluan minimum 6 aksara.'); return; }
-  if (pass !== pass2) { showSuErr('Kata laluan tidak sepadan. Sila semak semula.'); return; }
-
-  // Role-specific validations
-  if (role === 'super') {
-    if (!code) { showSuErr('Kod jemputan Admin wajib diisi.'); return; }
-  } else { // PIC
-    if (!klinikInput) { showSuErr('Sila isi nama klinik anda.'); return; }
-  }
-
-  const btn = document.getElementById('signup-btn');
-  const btnTxt = document.getElementById('signup-btn-text');
-  const originalLabel = role === 'super' ? 'Daftar Akaun Admin' : 'Hantar Permohonan PIC';
-  btn.disabled = true;
-  btnTxt.textContent = 'Memproses…';
-
-  try {
-    // Admin: validate invite code
-    if (role === 'super') {
-      const codeSnap = await get(ref(db, 'config/inviteCode'));
-      const validCode = codeSnap.val() || FALLBACK_INVITE;
-      if (code.toUpperCase() !== validCode.toUpperCase()) {
-        showSuErr('Kod jemputan tidak sah. Sila hubungi PKD Tumpat.');
-        return;
-      }
-    }
-
-    // PIC: find or create clinic
-    let klinikId = '';
-    if (role === 'pic' && klinikInput) {
-      const clinicSnap = await get(ref(db, 'klinik'));
-      const allClinics = clinicSnap.val() || {};
-      const existing = Object.entries(allClinics).find(([,c]) =>
-        (c.nama || '').toLowerCase() === klinikInput.toLowerCase()
-      );
-      if (existing) {
-        klinikId = existing[0];
-      } else {
-        const newRef = push(ref(db, 'klinik'));
-        await set(newRef, { nama: klinikInput, kawasan: '', tarikhDaftar: today() });
-        klinikId = newRef.key;
-      }
-    }
-
-    // Create Firebase Auth user
-    const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    const uid  = cred.user.uid;
-
-    // Build user profile based on role
-    const userData = {
-      nama, email, tel, jawatan,
-      role,
-      aktif: role === 'super' ? true : false,  // PIC requires Admin approval
-      tarikhDaftar: today(),
-    };
-    if (role === 'pic') userData.klinikId = klinikId;
-
-    await set(ref(db, `users/${uid}`), userData);
-
-    // Force log out so user must explicitly log in
-    await signOut(auth);
-
-    // Reset form fields
-    ['su-nama','su-email','su-tel','su-jawatan','su-pass','su-pass2','su-code'].forEach(i => {
-      const el = document.getElementById(i); if (el) el.value = '';
-    });
-    document.getElementById('pw-strength-bar').style.display = 'none';
-    document.getElementById('pw-strength-lbl').textContent = '';
-
-    if (role === 'super') {
-      toast('✅ Akaun Admin berjaya didaftarkan! Sila log masuk.', 3500);
-    } else {
-      toast('✅ Permohonan dihantar! Akaun anda akan diaktifkan oleh Admin.', 4000);
-    }
-
-    // Switch to login & prefill email
-    switchAuthMode('login');
-    document.getElementById('auth-email').value = email;
-    selectRole(role);
-
-  } catch(e) {
-    if (e.code === 'auth/email-already-in-use') showSuErr('E-mel ini sudah didaftarkan dalam sistem.');
-    else if (e.code === 'auth/invalid-email')   showSuErr('Format e-mel tidak sah.');
-    else if (e.code === 'auth/weak-password')   showSuErr('Kata laluan terlalu lemah.');
-    else if (e.code === 'auth/network-request-failed') showSuErr('Sambungan Internet bermasalah. Cuba lagi.');
-    else showSuErr('Ralat pendaftaran: ' + (e.message || 'Tidak diketahui'));
-  } finally {
-    btn.disabled = false;
-    btnTxt.textContent = originalLabel;
-  }
-
-};
-
-window.doLogin = async () => {
-  hideErr();
-  const email = document.getElementById('auth-email').value.trim();
-  const pass  = document.getElementById('auth-pass').value;
-  if (!email || !pass) { showErr('Sila isi e-mel dan kata laluan.'); return; }
-  const btn = document.getElementById('login-btn');
-  btn.disabled = true;
-  document.getElementById('login-btn-text').textContent = 'Mengesahkan…';
-  try {
-    const cred = await signInWithEmailAndPassword(auth, email, pass);
-    // Verify role matches
-    const snap = await get(ref(db, `users/${cred.user.uid}`));
-    const udata = snap.val();
-    if (!udata) { await signOut(auth); showErr('Akaun tidak didaftarkan dalam sistem.'); return; }
-    if (udata.role !== selectedRole) {
-      await signOut(auth);
-      showErr(`Anda tidak mempunyai akses sebagai "${selectedRole === 'super' ? 'Admin' : 'PIC Klinik'}".`);
-      return;
-    }
-    if (udata.aktif === false) {
-      await signOut(auth);
-      showErr('Akaun anda belum diaktifkan. Sila tunggu pengesahan dari Admin.');
-      return;
-    }
-    // Success — onAuthStateChanged will handle the rest
-  } catch(e) {
-    showErr('E-mel atau kata laluan tidak sah. Cuba semula.');
-  } finally {
-    btn.disabled = false;
-    document.getElementById('login-btn-text').textContent = 'Log Masuk';
-  }
-};
-
-window.doLogout = async () => {
-  await signOut(auth);
-};
-
-/* ── FIRST-RUN DETECTION ────────────────────────────────── */
-async function checkFirstRun() {
-  try {
-    const snap = await get(ref(db, 'users'));
-    if (!snap.exists() || !snap.val()) {
-      // No users at all → show bootstrap
-      document.getElementById('auth-mode-bar').style.display = 'none';
-      document.getElementById('auth-login-panel').style.display = 'none';
-      document.getElementById('auth-signup-panel').style.display = 'none';
-      document.getElementById('auth-bootstrap-panel').style.display = '';
-    }
-  } catch(e) {
-    // Firebase might not be accessible — just show login normally
-  }
-}
-checkFirstRun();
-
-window.doBootstrap = async () => {
-  const showBsErr = msg => {
-    const el = document.getElementById('bs-error');
-    el.textContent = msg; el.classList.add('show');
-  };
-  document.getElementById('bs-error').classList.remove('show');
-
-  const nama   = document.getElementById('bs-nama').value.trim();
-  const email  = document.getElementById('bs-email').value.trim().toLowerCase();
-  const pass   = document.getElementById('bs-pass').value;
-  const jawatan= document.getElementById('bs-jawatan').value.trim();
-
-  if (!nama)  { showBsErr('Sila isi nama penuh.'); return; }
-  if (!email) { showBsErr('Sila isi e-mel.'); return; }
-  if (!isValidOrgEmail(email)) { showBsErr(`E-mel mesti @${ALLOWED_DOMAIN}.`); return; }
-  if (!pass || pass.length < 6) { showBsErr('Kata laluan minimum 6 aksara.'); return; }
-
-  const btn = document.getElementById('bs-btn');
-  btn.disabled = true;
-  document.getElementById('bs-btn-text').textContent = '⏳ Mencipta akaun…';
-
-  try {
-    // 1. Create Firebase Auth user
-    const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    const uid  = cred.user.uid;
-
-    // 2. Save profile
-    await set(ref(db, `users/${uid}`), {
-      nama, email, jawatan,
-      tel: '',
-      role: 'super',
-      aktif: true,
-      tarikhDaftar: today(),
-    });
-
-    // 3. Set invite code
-    await set(ref(db, 'config/inviteCode'), FALLBACK_INVITE);
-
-    // 4. Sign out → force login
-    await signOut(auth);
-
-    // 5. Show login with success
-    document.getElementById('auth-mode-bar').style.display = '';
-    document.getElementById('auth-bootstrap-panel').style.display = 'none';
-    document.getElementById('auth-login-panel').style.display = '';
-    document.getElementById('auth-email').value = email;
-    document.getElementById('amode-login').classList.add('active');
-    selectRole('super');
-    toast('✅ Akaun Admin pertama berjaya dicipta! Sila log masuk.', 4000);
-  } catch(e) {
-    if (e.code === 'auth/email-already-in-use') {
-      showBsErr('E-mel ini sudah didaftarkan. Cuba log masuk.');
-      document.getElementById('auth-mode-bar').style.display = '';
-      document.getElementById('auth-bootstrap-panel').style.display = 'none';
-      document.getElementById('auth-login-panel').style.display = '';
-      document.getElementById('auth-email').value = email;
-    } else {
-      showBsErr('Ralat: ' + (e.message || 'Tidak dapat mencipta akaun.'));
-    }
-  } finally {
-    btn.disabled = false;
-    document.getElementById('bs-btn-text').textContent = '🚀 Cipta Akaun Admin & Mula';
-  }
-};
-
-onAuthStateChanged(auth, async user => {
-  if (user) {
-    const snap = await get(ref(db, `users/${user.uid}`));
-    if (!snap.exists()) { await signOut(auth); return; }
-    currentUser = { uid: user.uid, email: user.email, ...snap.val() };
-    bootApp();
-  } else {
-    currentUser = null;
-    document.getElementById('auth-screen').style.display = 'flex';
-    document.getElementById('app').classList.remove('visible');
-  }
+/* ── DIRECT BOOT — No login required ───────────────────── */
+onValue(ref(db, 'klinik'),  s => { clinics  = s.val() || {}; onDataChange(); });
+onValue(ref(db, 'users'),   s => { pics     = s.val() || {}; renderPICTable(); });
+onValue(ref(db, 'pesakit'), s => {
+  patients = s.val() || {};
+  onDataChange();
+  updateReminderBadge();
+  if (currentPID) renderDetail(currentPID);
 });
-
-/* ── BOOT APP ───────────────────────────────────────────── */
-function bootApp() {
-  document.getElementById('auth-screen').style.display = 'none';
-  document.getElementById('app').classList.add('visible');
-
-  // Role UI
-  const isSuper = currentUser.role === 'super';
-  document.getElementById('role-pill').innerHTML = isSuper
-    ? '<svg viewBox="0 0 32 32" width="14" height="14" fill="none" style="vertical-align:-2px"><circle cx="16" cy="11" r="5" stroke="currentColor" stroke-width="2.5"/><path d="M8 27c0-5 4-8 8-8s8 3 8 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M22 8l2-3 2 3M23 5v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Admin'
-    : '<svg viewBox="0 0 32 32" width="14" height="14" fill="none" style="vertical-align:-2px"><rect x="6" y="8" width="20" height="18" rx="3" stroke="currentColor" stroke-width="2.5"/><path d="M6 14h20" stroke="currentColor" stroke-width="2.5"/><circle cx="16" cy="21" r="2.5" stroke="currentColor" stroke-width="2"/></svg> PIC Klinik';
-  document.getElementById('role-pill').className = `role-pill ${isSuper ? 'super' : 'pic'}`;
-  document.querySelectorAll('.super-only').forEach(el => {
-    el.style.display = isSuper ? (el.classList.contains('btn') ? 'inline-flex' : '') : 'none';
-  });
-
-  // Realtime listeners
-  onValue(ref(db, 'klinik'), s => { clinics = s.val() || {}; onDataChange(); });
-  onValue(ref(db, 'users'),  s => { pics    = s.val() || {}; renderPICTable(); });
-  onValue(ref(db, 'pesakit'), s => {
-    const all = s.val() || {};
-    if (currentUser.role === 'pic') {
-      // Data siloing — only see own clinic
-      patients = Object.fromEntries(
-        Object.entries(all).filter(([,p]) => p.klinikId === currentUser.klinikId)
-      );
-    } else {
-      patients = all;
-    }
-    onDataChange();
-    updateReminderBadge();
-    if (currentPID) renderDetail(currentPID);
-  });
-
-  // PIC: lock klinik selector & show clinic name in topbar
-  if (!isSuper && currentUser.klinikId) {
-    document.getElementById('tb-clinic-name').textContent = '…';
-    get(ref(db, `klinik/${currentUser.klinikId}`)).then(s => {
-      document.getElementById('tb-clinic-name').textContent = s.val()?.nama || 'PKD Tumpat';
-    });
-  }
-}
 
 function onDataChange() {
   populateKlinikSelects();
   renderAdmin();
   renderLL();
-  renderReminder();
+  window.renderReminder();
   renderDashboard();
 }
+
 
 /* ── SELECTS ────────────────────────────────────────────── */
 function populateKlinikSelects() {
@@ -1627,12 +960,6 @@ function populateKlinikSelects() {
       sel.innerHTML += `<option value="${id}">${c.nama}</option>`;
     });
     if (prev) sel.value = prev;
-
-    // PIC locked to own clinic
-    if (currentUser?.role === 'pic' && currentUser.klinikId && (sid === 'pat-klinik' || sid === 'll-klinik')) {
-      sel.value = currentUser.klinikId;
-      sel.disabled = true;
-    }
   });
 }
 
@@ -1700,299 +1027,132 @@ window.deleteClinic = id => {
 
 /* ── PIC MANAGEMENT ─────────────────────────────────────── */
 window.openAddPIC = () => {
+/* ── PIC / ADMIN MANAGEMENT (no Firebase Auth — direct DB) ── */
+window.openAddPIC = () => {
   document.getElementById('pic-modal-title').textContent = '👤 Daftar PIC Baharu';
-  document.getElementById('pic-save-btn').textContent = '📧 Daftar & Hantar E-mel';
+  document.getElementById('pic-save-btn').textContent = '💾 Simpan PIC';
   document.getElementById('pic-save-btn').removeAttribute('data-adm-mode');
-  ['pic-nama','pic-email','pic-pass','pic-jawatan','pic-tel'].forEach(i => {
+  ['pic-nama','pic-email','pic-jawatan','pic-tel','pic-klinik'].forEach(i => {
     const el = document.getElementById(i); if (el) { el.value = ''; el.disabled = false; }
   });
   document.getElementById('pic-uid').value = '';
-  document.getElementById('pic-klinik').value = '';
-  // Show clinic field for PIC
   document.getElementById('pic-klinik').closest('.form-group').style.display = '';
+  // Hide password field — no auth
+  const passGrp = document.getElementById('pic-pass')?.closest('.form-group');
+  if (passGrp) passGrp.style.display = 'none';
+  openModal('mo-pic');
+};
+
+window.openAddAdmin = () => {
+  document.getElementById('pic-modal-title').textContent = '🛡️ Daftar Admin Baharu';
+  document.getElementById('pic-save-btn').textContent = '💾 Simpan Admin';
+  document.getElementById('pic-save-btn').setAttribute('data-adm-mode', 'admin');
+  ['pic-nama','pic-email','pic-jawatan','pic-tel'].forEach(i => {
+    const el = document.getElementById(i); if (el) { el.value = ''; el.disabled = false; }
+  });
+  document.getElementById('pic-uid').value = '';
+  document.getElementById('pic-klinik').closest('.form-group').style.display = 'none';
+  const passGrp = document.getElementById('pic-pass')?.closest('.form-group');
+  if (passGrp) passGrp.style.display = 'none';
   openModal('mo-pic');
 };
 
 window.savePIC = async () => {
-  const isAdmMode = document.getElementById('pic-save-btn').getAttribute('data-adm-mode') === 'admin';
-  const nama    = document.getElementById('pic-nama').value.trim();
-  const email   = document.getElementById('pic-email').value.trim().toLowerCase();
-  const pass    = document.getElementById('pic-pass').value;
-  const klinikInput = document.getElementById('pic-klinik').value.trim();
-  const jawatan = document.getElementById('pic-jawatan').value.trim();
-  const tel     = document.getElementById('pic-tel').value.trim();
-  const uid     = document.getElementById('pic-uid').value;
+  const isAdmMode  = document.getElementById('pic-save-btn').getAttribute('data-adm-mode') === 'admin';
+  const nama       = document.getElementById('pic-nama').value.trim();
+  const email      = document.getElementById('pic-email').value.trim().toLowerCase();
+  const klinikInput= document.getElementById('pic-klinik').value.trim();
+  const jawatan    = document.getElementById('pic-jawatan').value.trim();
+  const tel        = document.getElementById('pic-tel').value.trim();
+  const uid        = document.getElementById('pic-uid').value;
 
-  // Validate
-  if (!nama || !email) { toast('⚠️ Nama dan E-mel wajib diisi!'); return; }
-  if (!isAdmMode && !uid && !klinikInput) { toast('⚠️ Nama klinik wajib diisi untuk PIC!'); return; }
-  if (!isValidOrgEmail(email) && !uid) { toast(`⚠️ E-mel mesti @${ALLOWED_DOMAIN}!`); return; }
+  if (!nama) { toast('⚠️ Nama wajib diisi!'); return; }
 
   const btn = document.getElementById('pic-save-btn');
   const originalLabel = btn.textContent;
-  btn.disabled = true; btn.textContent = '⏳ Memproses…';
+  btn.disabled = true; btn.textContent = '⏳ Menyimpan…';
 
   try {
-    // Find or create clinic from free text
     let klinikId = '';
-    let klinikNama = klinikInput;
     if (!isAdmMode && klinikInput) {
-      // Check if clinic already exists (case-insensitive match)
       const existing = Object.entries(clinics).find(([,c]) =>
         (c.nama || '').toLowerCase() === klinikInput.toLowerCase()
       );
-      if (existing) {
-        klinikId = existing[0];
-        klinikNama = existing[1].nama;
-      } else {
-        // Create new clinic automatically
-        const newRef = push(ref(db, 'klinik'));
-        await set(newRef, { nama: klinikInput, kawasan: '', tarikhDaftar: today() });
-        klinikId = newRef.key;
-        klinikNama = klinikInput;
+      if (existing) { klinikId = existing[0]; }
+      else {
+        const nr = push(ref(db, 'klinik'));
+        await set(nr, { nama: klinikInput, kawasan: '', tarikhDaftar: today() });
+        klinikId = nr.key;
       }
     }
 
-    if (!uid) {
-      // Creating new account
-      if (!pass || pass.length < 6) { toast('⚠️ Kata laluan minimum 6 aksara!'); btn.disabled=false; btn.textContent=originalLabel; return; }
-      const cred = await createUserWithEmailAndPassword(auth, email, pass);
-      const newUid = cred.user.uid;
-      const role = isAdmMode ? 'super' : 'pic';
-      const userData = { nama, email, jawatan, tel, role, aktif: true, tarikhDaftar: today() };
-      if (!isAdmMode) userData.klinikId = klinikId;
-      await set(ref(db, `users/${newUid}`), userData);
-
-      if (isAdmMode) {
-        toast('✅ Admin baru berjaya didaftarkan!');
-        renderAdminTable();
-      } else {
-        toast('✅ PIC berjaya didaftarkan!');
-        await sendWelcomeEmail({ nama, email, password: pass, klinikNama });
-      }
-    } else {
+    if (uid) {
       // Update existing
       const updates = { nama, jawatan, tel };
       if (!isAdmMode && klinikId) updates.klinikId = klinikId;
       await update(ref(db, `users/${uid}`), updates);
-      toast('✅ Akaun dikemaskini!');
+      toast('✅ Rekod dikemaskini!');
+    } else {
+      // New record — generate key from email or push
+      const newKey = push(ref(db, 'users')).key;
+      const userData = { nama, email, jawatan, tel, role: isAdmMode ? 'super' : 'pic', aktif: true, tarikhDaftar: today() };
+      if (!isAdmMode) userData.klinikId = klinikId;
+      await set(ref(db, `users/${newKey}`), userData);
+      toast(isAdmMode ? '✅ Admin baru disimpan!' : '✅ PIC baru disimpan!');
+      if (isAdmMode) renderAdminTable();
     }
     closeModal('mo-pic');
   } catch(e) {
-    if (e.code === 'auth/email-already-in-use') toast('⚠️ E-mel ini sudah didaftarkan!');
-    else toast('❌ Ralat: ' + e.message);
+    toast('❌ Ralat: ' + e.message);
   } finally {
     btn.disabled = false; btn.textContent = originalLabel;
   }
 };
 
-/* Send welcome email via EmailJS */
-async function sendWelcomeEmail({ nama, email, password, klinikNama }) {
-  try {
-    const payload = {
-      service_id:  EJS.serviceId,
-      template_id: EJS.templateId,
-      user_id:     EJS.publicKey,
-      template_params: {
-        to_name:     nama,
-        to_email:    email,
-        username:    email,
-        password:    password,
-        klinik_nama: klinikNama,
-        app_url:     window.location.href,
-        admin_name:  currentUser?.nama || 'Admin PKD Tumpat',
-      }
-    };
-    await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    toast('📧 E-mel notifikasi dihantar kepada ' + email);
-    // Show preview
-    showEmailPreview({ nama, email, password, klinikNama });
-  } catch(e) {
-    toast('⚠️ Akaun dibuat, tetapi e-mel gagal dihantar. Hantar secara manual.');
-    showEmailPreview({ nama, email, password, klinikNama });
-  }
-}
-
-function showEmailPreview({ nama, email, password, klinikNama }) {
-  document.getElementById('email-preview-body').innerHTML = `
-    <div style="border:1px solid var(--g200);border-radius:10px;overflow:hidden">
-      <div style="background:var(--navy);color:white;padding:16px 20px">
-        <div style="font-size:16px;font-weight:800">🩺 GDM Postnatal e-Registry</div>
-        <div style="font-size:11px;opacity:.6;margin-top:2px">PKD Tumpat, Kelantan</div>
-      </div>
-      <div style="padding:20px;font-size:13px;line-height:1.7">
-        <p>Assalamualaikum / Salam Sejahtera <b>${nama}</b>,</p>
-        <p style="margin-top:10px">Selamat datang ke <b>GDM Postnatal e-Registry</b>. Akaun anda sebagai PIC Klinik telah berjaya didaftarkan oleh Admin PKD Tumpat.</p>
-        <div style="background:var(--g50);border-radius:8px;padding:14px 16px;margin:14px 0;border:1px solid var(--g200)">
-          <div style="font-weight:800;margin-bottom:8px;color:var(--navy)">🔑 Kredensial Log Masuk</div>
-          <table style="width:100%;font-size:12px">
-            <tr><td style="padding:4px 0;color:var(--g500)">Klinik</td><td style="font-weight:700">${klinikNama}</td></tr>
-            <tr><td style="padding:4px 0;color:var(--g500)">Username</td><td style="font-family:monospace;font-weight:700">${email}</td></tr>
-            <tr><td style="padding:4px 0;color:var(--g500)">Kata Laluan</td><td style="font-family:monospace;font-weight:700">${password}</td></tr>
-          </table>
-        </div>
-        <p>🔗 <b>Pautan Akses:</b> <a href="${window.location.href}" style="color:var(--teal)">${window.location.href}</a></p>
-        <p style="margin-top:10px;color:var(--g500);font-size:11px">⚠️ Sila tukar kata laluan anda selepas log masuk pertama kali.</p>
-        <p style="margin-top:10px;color:var(--g500);font-size:11px">Sekiranya ada pertanyaan, sila hubungi Admin PKD Tumpat.</p>
-      </div>
-    </div>
-  `;
-  openModal('mo-email-preview');
-}
-
-window.editPIC = async uid => {
-  const u = pics[uid];
-  if (!u) return;
-  document.getElementById('pic-modal-title').textContent = '✏️ Kemaskini PIC';
+window.editPIC = uid => {
+  const u = pics[uid]; if (!u) return;
+  document.getElementById('pic-modal-title').textContent = '✏️ Kemaskini';
   document.getElementById('pic-save-btn').textContent = '💾 Kemaskini';
   document.getElementById('pic-save-btn').removeAttribute('data-adm-mode');
   document.getElementById('pic-nama').value    = u.nama || '';
   document.getElementById('pic-email').value   = u.email || '';
   document.getElementById('pic-email').disabled = true;
-  document.getElementById('pic-pass').value    = '';
   document.getElementById('pic-jawatan').value = u.jawatan || '';
   document.getElementById('pic-tel').value     = u.tel || '';
-  // Show clinic name (not ID) in text input
   document.getElementById('pic-klinik').value  = clinics[u.klinikId]?.nama || u.klinikId || '';
-  document.getElementById('pic-klinik').closest('.form-group').style.display = '';
-  document.getElementById('pic-uid').value     = uid;
+  document.getElementById('pic-klinik').closest('.form-group').style.display = u.role === 'pic' ? '' : 'none';
+  const passGrp = document.getElementById('pic-pass')?.closest('.form-group');
+  if (passGrp) passGrp.style.display = 'none';
+  document.getElementById('pic-uid').value = uid;
   openModal('mo-pic');
 };
 
 window.deletePIC = uid => {
   const u = pics[uid];
-  document.getElementById('confirm-msg').textContent = `Padam akaun PIC "${u?.nama}" (${u?.email})?`;
+  document.getElementById('confirm-msg').textContent = `Padam rekod "${u?.nama}"?`;
   document.getElementById('confirm-btn').onclick = async () => {
-    await update(ref(db, `users/${uid}`), { aktif: false });
-    closeModal('mo-confirm'); toast('🗑️ Akaun PIC dipadam.');
+    await remove(ref(db, `users/${uid}`));
+    closeModal('mo-confirm'); toast('🗑️ Rekod dipadam.');
   };
   openModal('mo-confirm');
 };
-
-/* ── RENDER ADMIN ───────────────────────────────────────── */
-function renderAdmin() {
-  if (currentUser?.role !== 'super') return;
-  const container = document.getElementById('clinic-list');
-  if (!container) return;
-  const entries = Object.entries(clinics);
-  if (!entries.length) {
-    container.innerHTML = '<div class="empty"><div class="eico">🏥</div><p>Tiada klinik</p></div>';
-    return;
-  }
-  container.innerHTML = `<div class="tbl-wrap"><table>
-    <thead><tr><th>#</th><th>Nama Klinik</th><th>Kawasan</th><th>Bil. Pesakit</th><th>Tarikh Daftar</th><th></th></tr></thead>
-    <tbody>${entries.map(([id,c],i) => {
-      const cnt = Object.values(patients).filter(p => p.klinikId === id).length;
-      return `<tr>
-        <td class="muted">${i+1}</td>
-        <td class="fw7">🏥 ${c.nama}</td>
-        <td class="muted">${c.kawasan||'—'}</td>
-        <td><span class="badge">${cnt}</span></td>
-        <td class="muted">${fmt(c.tarikhDaftar)}</td>
-        <td>
-          <button class="btn-icon" onclick="editClinic('${id}')">✏️</button>
-          <button class="btn-icon del" onclick="deleteClinic('${id}')">🗑️</button>
-        </td>
-      </tr>`;
-    }).join('')}</tbody>
-  </table></div>`;
-}
-
-function renderPICTable() {
-  const tbody = document.getElementById('pic-tbody');
-  if (!tbody) return;
-  const picUsers = Object.entries(pics).filter(([,u]) => u.role === 'pic');
-  if (!picUsers.length) {
-    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="eico">👤</div><p>Tiada PIC didaftarkan</p></div></td></tr>';
-    return;
-  }
-  // Sort: pending first, then alphabetical
-  picUsers.sort(([,a],[,b]) => {
-    const aPending = a.aktif === false ? 0 : 1;
-    const bPending = b.aktif === false ? 0 : 1;
-    if (aPending !== bPending) return aPending - bPending;
-    return (a.nama||'').localeCompare(b.nama||'');
-  });
-  let i = 0;
-  tbody.innerHTML = picUsers.map(([uid,u]) => {
-    const clinic = clinics[u.klinikId] || {};
-    const aktif = u.aktif !== false;
-    const rowBg = !aktif ? 'background:#fffbeb' : '';
-    return `<tr style="${rowBg}">
-      <td class="muted">${++i}</td>
-      <td>
-        <div class="fw7">${u.nama||'—'} ${!aktif ? '<span class="tag tag-urgent" style="font-size:9px;margin-left:4px">⏳ Menunggu</span>' : ''}</div>
-        <div class="muted">${u.jawatan||''}</div>
-      </td>
-      <td class="mono muted" style="font-size:11px">${u.email||'—'}</td>
-      <td>${clinic.nama ? `<span class="tag tag-pic">${clinic.nama}</span>` : '—'}</td>
-      <td><span class="dot ${aktif?'dot-green':'dot-orange'}"></span>${aktif?'Aktif':'Menunggu Pengesahan'}</td>
-      <td class="muted">${fmt(u.tarikhDaftar)}</td>
-      <td style="white-space:nowrap">
-        ${!aktif ? `<button class="btn btn-primary btn-sm" onclick="approvePIC('${uid}')" style="padding:4px 8px;font-size:10px">✅ Aktifkan</button>` : ''}
-        <button class="btn-icon" onclick="editPIC('${uid}')">✏️</button>
-        <button class="btn-icon del" onclick="deletePIC('${uid}')">🗑️</button>
-      </td>
-    </tr>`;
-  }).join('');
-}
 
 window.approvePIC = async uid => {
   await update(ref(db, `users/${uid}`), { aktif: true });
   toast('✅ Akaun PIC diaktifkan!');
 };
 
-/* ── ADMIN TABLE ────────────────────────────────────────── */
-function renderAdminTable() {
-  const tbody = document.getElementById('admin-tbody');
-  if (!tbody) return;
-  const adminUsers = Object.entries(pics).filter(([,u]) => u.role === 'super');
-  if (!adminUsers.length) {
-    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="eico">🛡️</div><p>Tiada Admin didaftarkan</p></div></td></tr>';
-    return;
-  }
-  let i = 0;
-  tbody.innerHTML = adminUsers.map(([uid,u]) => {
-    const isMe = uid === currentUser?.uid;
-    return `<tr>
-      <td class="muted">${++i}</td>
-      <td>
-        <div class="fw7">${u.nama||'—'} ${isMe?'<span class="tag tag-done" style="font-size:9px;margin-left:4px">Anda</span>':''}</div>
-      </td>
-      <td class="mono muted" style="font-size:11px">${u.email||'—'}</td>
-      <td class="muted">${u.jawatan||'—'}</td>
-      <td><span class="dot dot-green"></span>Aktif</td>
-      <td class="muted">${fmt(u.tarikhDaftar)}</td>
-      <td>${!isMe?`<button class="btn-icon del" onclick="deleteAdmin('${uid}')">🗑️</button>`:''}</td>
-    </tr>`;
-  }).join('');
-}
-
-window.openAddAdmin = () => {
-  document.getElementById('pic-modal-title').textContent = '🛡️ Daftar Admin Baharu';
-  document.getElementById('pic-save-btn').textContent = '🛡️ Daftar Admin';
-  document.getElementById('pic-save-btn').setAttribute('data-adm-mode', 'admin');
-  ['pic-nama','pic-email','pic-pass','pic-jawatan','pic-tel'].forEach(i => {
-    const el = document.getElementById(i); if (el) { el.value = ''; el.disabled = false; }
-  });
-  document.getElementById('pic-uid').value = '';
-  // Hide clinic field for admin
-  document.getElementById('pic-klinik').closest('.form-group').style.display = 'none';
-  openModal('mo-pic');
-};
-
 window.deleteAdmin = uid => {
   const u = pics[uid];
-  document.getElementById('confirm-msg').textContent = `Nyahaktifkan akaun Admin "${u?.nama}" (${u?.email})?`;
+  document.getElementById('confirm-msg').textContent = `Padam rekod Admin "${u?.nama}"?`;
   document.getElementById('confirm-btn').onclick = async () => {
-    await update(ref(db, `users/${uid}`), { aktif: false });
-    closeModal('mo-confirm'); toast('🗑️ Akaun Admin dinyahaktifkan.');
+    await remove(ref(db, `users/${uid}`));
+    closeModal('mo-confirm'); toast('🗑️ Rekod Admin dipadam.');
     renderAdminTable();
   };
+  openModal('mo-confirm');
+};
+
   openModal('mo-confirm');
 };
 
@@ -2004,10 +1164,6 @@ window.openAddPatient = () => {
   ['pat-bersalin','pat-parity','pat-tinggi','pat-berat'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});
   ['pat-htn','pat-hld','pat-anemia'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});
   document.getElementById('pat-eid').value = '';
-  // PIC auto-select clinic
-  if (currentUser?.role === 'pic' && currentUser.klinikId) {
-    document.getElementById('pat-klinik').value = currentUser.klinikId;
-  }
   openModal('mo-patient');
 };
 window.openEditPatient = () => {
@@ -2058,7 +1214,6 @@ window.savePatient = async () => {
     anemia: document.getElementById('pat-anemia').value,
     komorbidLain: document.getElementById('pat-komorbid').value.trim(),
     tarikhDaftar: editingPID?(patients[editingPID]?.tarikhDaftar||today()):today(),
-    dimasukOleh: currentUser?.uid||'',
   };
   if (editingPID) { await update(ref(db,`pesakit/${editingPID}`),data); toast('✅ Kemaskini berjaya!'); }
   else            { await push(ref(db,'pesakit'),data); toast('✅ Pesakit baru didaftarkan!'); }
@@ -2346,7 +1501,6 @@ window.renderLL = () => {
 
 /* ── DOWNLOAD CSV ────────────────────────────────────────── */
 window.downloadCSV = () => {
-  if (currentUser?.role !== 'super') { toast('⚠️ Akses ditolak.'); return; }
 
   const YEARS = ['2027','2028','2029','2030'];
 
