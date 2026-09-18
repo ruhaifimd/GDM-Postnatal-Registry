@@ -862,10 +862,14 @@ tr:hover td { background: rgba(13,115,119,.02); }
    the same ref/get/set/update/remove/push/onValue API used by the app, but adds
    timeouts, local caching and a safe demo fallback for disconnected clinics. */
 const DATABASE_URL = "https://postnatal-gdm-e-registry-45295-default-rtdb.asia-southeast1.firebasedatabase.app";
+const FIREBASE_API_KEY = "AIzaSyCoEQ86Um7fNroGxxIBJDXbSTFcdBmr5NA";
+const IDENTITY_TOOLKIT_URL = "https://identitytoolkit.googleapis.com/v1/accounts:signUp";
 const CACHE_KEY = 'gdm-postnatal-registry-cache-v3';
 const REQUEST_TIMEOUT = 4500;
 const db = { databaseURL: DATABASE_URL };
 const dataRuntime = { mode: 'loading', demoFallback: false, fallbackPaths: new Set(), refreshers: [], lastError: null };
+let authToken = null;
+let authPromise = null;
 
 const clone = value => value == null ? value : JSON.parse(JSON.stringify(value));
 const normalisePath = path => String(path || '').replace(/^\/+|\/+$/g, '');
@@ -967,10 +971,27 @@ const localValue = path => {
   return path === 'users' ? {} : null;
 };
 const request = async (path, options = {}) => {
+  if (!authToken) {
+    if (!authPromise) {
+      const authController = new AbortController();
+      const authTimer = setTimeout(() => authController.abort(), REQUEST_TIMEOUT);
+      authPromise = fetch(`${IDENTITY_TOOLKIT_URL}?key=${FIREBASE_API_KEY}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ returnSecureToken: true }), signal: authController.signal
+      }).then(async response => {
+        if (!response.ok) throw new Error(`Firebase Auth ${response.status}`);
+        const payload = await response.json();
+        authToken = payload.idToken;
+        return authToken;
+      }).finally(() => { clearTimeout(authTimer); authPromise = null; });
+    }
+    await authPromise;
+  }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
   try {
-    const response = await fetch(`${db.databaseURL}/${normalisePath(path)}.json`, {
+    const authQuery = authToken ? `?auth=${encodeURIComponent(authToken)}` : '';
+    const response = await fetch(`${db.databaseURL}/${normalisePath(path)}.json${authQuery}`, {
       ...options, signal: controller.signal, cache: 'no-store', headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
     });
     if (!response.ok) throw new Error(`Firebase ${response.status}`);
