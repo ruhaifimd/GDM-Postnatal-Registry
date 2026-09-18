@@ -444,6 +444,25 @@ tr:hover td { background: rgba(13,115,119,.02); }
 .spin { width: 18px; height: 18px; border: 2px solid var(--g200); border-top-color: var(--teal2); border-radius: 50%; animation: spin .6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* DATA CONNECTION */
+.data-status {
+  display: inline-flex; align-items: center; gap: 7px; padding: 6px 10px;
+  border: 1px solid rgba(255,255,255,.14); border-radius: 99px;
+  background: rgba(255,255,255,.08); color: rgba(255,255,255,.78);
+  font-size: 11px; font-weight: 700; cursor: pointer; transition: all .2s;
+}
+.data-status:hover { background: rgba(255,255,255,.15); color: white; }
+.data-status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow2); box-shadow: 0 0 0 3px rgba(251,191,36,.14); }
+.data-status.connected::before { background: var(--green2); box-shadow: 0 0 0 3px rgba(16,185,129,.14); }
+.data-status.offline::before, .data-status.demo::before { background: var(--orange2); box-shadow: 0 0 0 3px rgba(249,115,22,.14); }
+.data-notice {
+  max-width: 1280px; margin: 12px auto 0; padding: 10px 14px; border-radius: 10px;
+  background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412;
+  font-size: 12px; line-height: 1.5;
+}
+.data-notice[hidden] { display: none; }
+@media(max-width:520px) { .data-status span { display: none; } .data-status { padding: 7px; } }
+
 /* CLINICS GRID */
 .clinic-grid { display: grid; gap: 12px; }
 .clinic-card { background: white; border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; }
@@ -498,6 +517,9 @@ tr:hover td { background: rgba(13,115,119,.02); }
       </div>
     </div>
     <div class="topbar-right">
+      <button class="data-status" id="data-status" type="button" onclick="refreshData()" title="Klik untuk muat semula data">
+        <span id="data-status-label">Menyambung…</span>
+      </button>
     </div>
   </div>
 
@@ -508,6 +530,7 @@ tr:hover td { background: rgba(13,115,119,.02); }
     <div class="nav-tab" id="tab-reminder" onclick="showPage('page-reminder')">⚠️ Peringatan <span class="badge badge-red" id="badge-reminder" style="display:none">0</span></div>
     <div class="nav-tab" id="tab-admin" onclick="showPage('page-admin')">⚙️ Admin</div>
   </div>
+  <div class="data-notice" id="data-notice" hidden></div>
 
   <!-- ─────────────────────────────────────────────
        PAGE: DASHBOARD
@@ -578,6 +601,7 @@ tr:hover td { background: rgba(13,115,119,.02); }
         <div class="card-title">📋 Senarai Pesakit <span class="badge" id="ll-count">0</span></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-primary btn-sm" onclick="openAddPatient()">+ Tambah Pesakit</button>
+          <button class="btn btn-ghost btn-sm" onclick="seedDemoPatients()">🧪 10 Data Ujian</button>
           <button class="btn btn-ghost btn-sm" id="btn-csv" onclick="downloadCSV()">⬇️ Muat Turun CSV</button>
         </div>
       </div>
@@ -830,25 +854,198 @@ tr:hover td { background: rgba(13,115,119,.02); }
 <!-- ═══════════════════════════════════════════════════════
      FIREBASE + APP JS
 ═══════════════════════════════════════════════════════ -->
-<script type="module">
-import { initializeApp }
-  from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import {
-  getDatabase, ref, push, get, set, update, remove, onValue
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+<script>
 
-/* ── CONFIG ───────────────────────────────────────────── */
-const fbApp = initializeApp({
-  apiKey: "AIzaSyCoEQ86Um7fNroGxxIBJDXbSTFcdBmr5NA",
-  authDomain: "postnatal-gdm-e-registry-45295.firebaseapp.com",
-  databaseURL: "https://postnatal-gdm-e-registry-45295-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "postnatal-gdm-e-registry-45295",
-  storageBucket: "postnatal-gdm-e-registry-45295.firebasestorage.app",
-  messagingSenderId: "193423566089",
-  appId: "1:193423566089:web:84603dcb253cbdafbddfd8"
-});
+/* ── DATA ACCESS ──────────────────────────────────────────
+   The old Firebase ES-module boot could fail before any renderer was registered,
+   which left every screen stuck on “Memuatkan…”. The REST adapter below keeps
+   the same ref/get/set/update/remove/push/onValue API used by the app, but adds
+   timeouts, local caching and a safe demo fallback for disconnected clinics. */
+const DATABASE_URL = "https://postnatal-gdm-e-registry-45295-default-rtdb.asia-southeast1.firebasedatabase.app";
+const CACHE_KEY = 'gdm-postnatal-registry-cache-v3';
+const REQUEST_TIMEOUT = 4500;
+const db = { databaseURL: DATABASE_URL };
+const dataRuntime = { mode: 'loading', demoFallback: false, fallbackPaths: new Set(), refreshers: [], lastError: null };
 
-const db = getDatabase(fbApp);
+const clone = value => value == null ? value : JSON.parse(JSON.stringify(value));
+const normalisePath = path => String(path || '').replace(/^\/+|\/+$/g, '');
+const pathParts = path => normalisePath(path).split('/').filter(Boolean);
+const readAt = (root, path) => pathParts(path).reduce((value, part) => value == null ? undefined : value[part], root);
+const writeAt = (root, path, value) => {
+  const parts = pathParts(path);
+  if (!parts.length) return value;
+  let cursor = root;
+  parts.slice(0, -1).forEach(part => {
+    if (!cursor[part] || typeof cursor[part] !== 'object') cursor[part] = {};
+    cursor = cursor[part];
+  });
+  if (value === null || value === undefined) delete cursor[parts[parts.length - 1]];
+  else cursor[parts[parts.length - 1]] = clone(value);
+  return root;
+};
+const readCache = () => {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}'); }
+  catch { return {}; }
+};
+let localCache = readCache();
+
+const dateOffset = days => {
+  const d = new Date(); d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+const buildDemoData = () => {
+  const demoClinics = {
+    'demo-klinik-tumpat': { nama: 'Klinik Ujian Tumpat', kawasan: 'Tumpat', tarikhDaftar: dateOffset(-14), demo: true },
+    'demo-klinik-wakaf': { nama: 'Klinik Ujian Wakaf Bharu', kawasan: 'Tumpat', tarikhDaftar: dateOffset(-14), demo: true },
+    'demo-klinik-pasir': { nama: 'Klinik Ujian Pasir Mas', kawasan: 'Pasir Mas', tarikhDaftar: dateOffset(-14), demo: true }
+  };
+  const daysSinceDelivery = [35, 42, 55, 70, 100, 160, 420, 520, 720, 900];
+  const demoPatients = {};
+  daysSinceDelivery.forEach((days, index) => {
+    const n = String(index + 1).padStart(2, '0');
+    const delivery = dateOffset(-days);
+    const patient = {
+      klinikId: Object.keys(demoClinics)[index % 3],
+      nama: `DEMO – Pesakit Ujian ${n}`,
+      ic: `900101-03-${String(1000 + index)}`,
+      tel: `013-555 ${String(1000 + index)}`,
+      tel2: '',
+      alamat: 'Rekod ujian — bukan data klinikal sebenar',
+      tarikhBersalin: delivery,
+      parity: index % 3 === 0 ? '2' : '1',
+      tinggi: 1.5 + (index % 5) * 0.02,
+      berat: 52 + index * 2,
+      htn: index % 4 === 0 ? 'Ya' : 'Tidak',
+      hld: index % 5 === 0 ? 'Ya' : 'Tidak',
+      anemia: index % 3 === 0 ? 'Ya' : 'Tidak',
+      komorbidLain: index % 4 === 1 ? 'Tiada' : '',
+      tarikhDaftar: dateOffset(-days - 10),
+      demo: true
+    };
+    if (index < 5) {
+      patient.ogtt6w = {
+        tarikhUjian: dateOffset(-(days - 42)),
+        fasting: index === 2 ? '6.2' : index === 3 ? '7.4' : '5.1',
+        postprandial: index === 2 ? '8.0' : index === 3 ? '12.1' : '6.8'
+      };
+    }
+    if (index >= 6) {
+      const year = String(2026 + Math.min(index - 5, 4));
+      patient.ujianTahunan = { [year]: { tarikhUjian: dateOffset(-30), jenis: 'HbA1c', nilai: index === 8 ? '6.7' : '5.5' } };
+    }
+    demoPatients[`demo-patient-${n}`] = patient;
+  });
+  return { klinik: demoClinics, users: {}, pesakit: demoPatients };
+};
+const demoData = buildDemoData();
+
+const setDataStatus = (mode, detail) => {
+  dataRuntime.mode = mode;
+  const el = document.getElementById('data-status');
+  const label = document.getElementById('data-status-label');
+  if (!el || !label) return;
+  el.className = `data-status ${mode === 'remote' ? 'connected' : mode}`;
+  label.textContent = detail || (mode === 'remote' ? 'Disambung' : mode === 'demo' ? 'Data ujian' : 'Mod luar talian');
+  el.title = mode === 'remote' ? 'Firebase disambung · Klik untuk muat semula' : 'Klik untuk cuba sambung semula ke Firebase';
+  const notice = document.getElementById('data-notice');
+  if (notice) {
+    notice.hidden = mode === 'remote';
+    notice.innerHTML = mode === 'demo'
+      ? '🧪 <strong>Mod data ujian:</strong> Firebase belum mengembalikan rekod, jadi 10 subjek demo dipaparkan untuk ujian UI. Rekod ini tidak dihantar ke pangkalan data sehingga anda menyimpannya.'
+      : mode === 'offline'
+        ? '⚠️ <strong>Mod luar talian:</strong> Firebase tidak dapat dicapai sekarang. Perubahan disimpan pada peranti ini dan akan kekal boleh digunakan sehingga sambungan pulih.'
+        : '';
+  }
+};
+
+const saveCache = () => { try { localStorage.setItem(CACHE_KEY, JSON.stringify(localCache)); } catch {} };
+const localValue = path => {
+  const cached = readAt(localCache, path);
+  const cachedEmpty = cached && typeof cached === 'object' && Object.keys(cached).length === 0;
+  if (cached !== undefined && !((path === 'klinik' || path === 'pesakit') && cachedEmpty)) return cached;
+  if (path === 'klinik' || path === 'pesakit') return readAt(demoData, path);
+  return path === 'users' ? {} : null;
+};
+const request = async (path, options = {}) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+  try {
+    const response = await fetch(`${db.databaseURL}/${normalisePath(path)}.json`, {
+      ...options, signal: controller.signal, cache: 'no-store', headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
+    });
+    if (!response.ok) throw new Error(`Firebase ${response.status}`);
+    return await response.json();
+  } finally { clearTimeout(timer); }
+};
+const ref = (database, path) => ({ database, path: normalisePath(path), key: pathParts(path).pop() || null });
+const get = async databaseRef => {
+  const value = await request(databaseRef.path);
+  return { val: () => clone(value) };
+};
+const applyLocalWrite = (path, value, merge = false) => {
+  const current = readAt(localCache, path);
+  const next = merge && current && typeof current === 'object' ? { ...current, ...clone(value) } : clone(value);
+  localCache = writeAt(localCache, path, next) || {};
+  saveCache();
+  return next;
+};
+const write = async (databaseRef, value, method = 'PUT', merge = false) => {
+  try {
+    const response = await request(databaseRef.path, { method, body: JSON.stringify(value) });
+    applyLocalWrite(databaseRef.path, response === null ? value : response, merge);
+    setDataStatus('remote');
+    return response;
+  } catch (error) {
+    dataRuntime.lastError = error;
+    applyLocalWrite(databaseRef.path, value, merge);
+    setDataStatus('offline', 'Disimpan pada peranti');
+    return null;
+  }
+};
+const set = (databaseRef, value) => write(databaseRef, value, 'PUT', false);
+const update = (databaseRef, value) => write(databaseRef, value, 'PATCH', true);
+const remove = databaseRef => write(databaseRef, null, 'DELETE', false);
+const push = async (databaseRef, value) => {
+  const key = `-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+  const child = ref(databaseRef.database, `${databaseRef.path}/${key}`);
+  child.key = key;
+  if (value !== undefined) await set(child, value);
+  return child;
+};
+const refreshData = async () => {
+  setDataStatus('loading', 'Menyambung…');
+  dataRuntime.refreshers.forEach(fn => fn());
+};
+const onValue = (databaseRef, callback, onError) => {
+  let disposed = false;
+  const refresh = async () => {
+    try {
+      const remoteValue = await request(databaseRef.path);
+      if (disposed) return;
+      const emptySnapshot = remoteValue == null || (typeof remoteValue === 'object' && Object.keys(remoteValue).length === 0);
+      const useDemo = (databaseRef.path === 'klinik' || databaseRef.path === 'pesakit') && emptySnapshot;
+      const value = useDemo ? localValue(databaseRef.path) : remoteValue;
+      if (useDemo) dataRuntime.fallbackPaths.add(databaseRef.path);
+      else dataRuntime.fallbackPaths.delete(databaseRef.path);
+      dataRuntime.demoFallback = dataRuntime.fallbackPaths.size > 0;
+      if (!useDemo) applyLocalWrite(databaseRef.path, remoteValue, false);
+      setDataStatus(dataRuntime.demoFallback ? 'demo' : 'remote');
+      callback({ val: () => clone(value) });
+    } catch (error) {
+      if (disposed) return;
+      dataRuntime.lastError = error;
+      dataRuntime.fallbackPaths.add(databaseRef.path);
+      dataRuntime.demoFallback = true;
+      setDataStatus('offline', 'Mod luar talian');
+      callback({ val: () => clone(localValue(databaseRef.path)) });
+      if (onError) onError(error);
+    }
+  };
+  refresh();
+  const timer = setInterval(refresh, 30000);
+  dataRuntime.refreshers.push(refresh);
+  return () => { disposed = true; clearInterval(timer); };
+};
 
 /* ── STATE ──────────────────────────────────────────────── */
 let clinics   = {};
@@ -924,6 +1121,35 @@ const hasYearlyResult = (r) => {
   return r.nilai && String(r.nilai).trim() !== '';
 };
 
+/* Result interpretation: thresholds kept in one place so dashboard, list and
+   patient detail always show the same clinical category. */
+const asNumber = value => {
+  const n = Number.parseFloat(value);
+  return Number.isFinite(n) ? n : null;
+};
+const ogttRes = (fasting, postprandial) => {
+  const f = asNumber(fasting), p = asNumber(postprandial);
+  if (f === null && p === null) return null;
+  if ((f !== null && f >= 7.0) || (p !== null && p >= 11.1)) return 'T2DM';
+  if (f !== null && f >= 6.1) return 'IFG';
+  if (p !== null && p >= 7.8) return 'IGT';
+  return 'Normal';
+};
+const yrRes = (jenis, value) => {
+  const n = asNumber(value);
+  if (!jenis || n === null) return null;
+  if (jenis === 'HbA1c') return n >= 6.5 ? 'T2DM' : n >= 5.7 ? 'Prediabetes' : 'Normal';
+  if (jenis === 'FBS') return n >= 7.0 ? 'T2DM' : n >= 6.1 ? 'IFG' : 'Normal';
+  if (jenis === 'RBS') return n >= 11.1 ? 'T2DM' : n >= 7.8 ? 'Risiko' : 'Normal';
+  return null;
+};
+const mkTag = result => {
+  if (!result) return '<span class="tag tag-pending">Belum ujian</span>';
+  const cls = result === 'Normal' ? 'tag-normal' : result === 'T2DM' ? 'tag-t2dm' : 'tag-pred';
+  const label = result === 'IFG' || result === 'IGT' || result === 'Prediabetes' || result === 'Risiko' ? `${result} / Prediabetes` : result;
+  return `<span class="tag ${cls}">${label}</span>`;
+};
+
 const toast = (msg, dur=2800) => {
   const el = document.getElementById('toast');
   el.textContent = msg; el.style.display = 'block';
@@ -946,6 +1172,24 @@ function onDataChange() {
   window.renderReminder();
   renderDashboard();
 }
+
+window.refreshData = refreshData;
+window.seedDemoPatients = async () => {
+  const existingDemo = Object.values(patients).filter(p => p && p.demo).length;
+  if (existingDemo >= 10) {
+    onDataChange();
+    updateReminderBadge();
+    toast('🧪 10 data ujian sudah tersedia.');
+    return;
+  }
+  await update(ref(db, 'klinik'), clone(demoData.klinik));
+  await update(ref(db, 'pesakit'), clone(demoData.pesakit));
+  clinics = { ...clinics, ...clone(demoData.klinik) };
+  patients = { ...patients, ...clone(demoData.pesakit) };
+  onDataChange();
+  updateReminderBadge();
+  toast('🧪 10 data ujian ditambah — tandakan DEMO sebelum digunakan.');
+};
 
 
 /* ── SELECTS ────────────────────────────────────────────── */
@@ -988,6 +1232,43 @@ window.switchAdminTab = tab => {
   if (tab === 'admins') renderAdminTable();
 };
 
+const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' }[char]));
+function renderAdmin() {
+  const list = document.getElementById('clinic-list');
+  if (!list) return;
+  const entries = Object.entries(clinics);
+  list.innerHTML = entries.length ? `<div class="clinic-grid">${entries.map(([id, clinic]) => `
+    <div class="clinic-card">
+      <div class="clinic-card-hdr">
+        <div><div class="clinic-name">${escapeHtml(clinic.nama || 'Klinik tanpa nama')}</div><div class="clinic-meta">${escapeHtml(clinic.kawasan || 'Kawasan tidak ditetapkan')}</div></div>
+        <div style="display:flex;gap:4px"><button class="btn-icon" style="color:white" title="Edit" onclick="editClinic('${escapeHtml(id)}')">✏️</button><button class="btn-icon" style="color:white" title="Padam" onclick="deleteClinic('${escapeHtml(id)}')">🗑️</button></div>
+      </div>
+      <div style="padding:12px 16px;font-size:11px;color:var(--g500)"><strong>${Object.values(patients).filter(p => p.klinikId === id).length}</strong> rekod pesakit berdaftar</div>
+    </div>`).join('')}</div>`
+    : '<div class="empty"><div class="eico">🏥</div><p>Belum ada klinik</p><div class="muted">Tambah klinik untuk mula mendaftarkan pesakit.</div></div>';
+}
+function renderPICTable() {
+  const tbody = document.getElementById('pic-tbody');
+  if (!tbody) return;
+  const entries = Object.entries(pics).filter(([, user]) => user?.role !== 'super');
+  tbody.innerHTML = entries.length ? entries.map(([id, user], index) => `
+    <tr><td>${index + 1}</td><td class="fw7">${escapeHtml(user.nama || '—')}</td><td>${escapeHtml(user.email || '—')}</td>
+      <td>${escapeHtml(clinics[user.klinikId]?.nama || user.klinikId || '—')}</td>
+      <td><span class="tag ${user.aktif === false ? 'tag-pending' : 'tag-done'}">${user.aktif === false ? 'Tidak aktif' : 'Aktif'}</span></td>
+      <td class="muted">${fmt(user.tarikhDaftar)}</td><td><button class="btn-icon" title="Edit" onclick="editPIC('${escapeHtml(id)}')">✏️</button><button class="btn-icon del" title="Padam" onclick="deletePIC('${escapeHtml(id)}')">🗑️</button></td></tr>`).join('')
+    : '<tr><td colspan="7"><div class="empty"><div class="eico">👤</div><p>Belum ada akaun PIC</p><div class="muted">Daftar PIC untuk memudahkan pemilikan klinik.</div></div></td></tr>';
+}
+function renderAdminTable() {
+  const tbody = document.getElementById('admin-tbody');
+  if (!tbody) return;
+  const entries = Object.entries(pics).filter(([, user]) => user?.role === 'super');
+  tbody.innerHTML = entries.length ? entries.map(([id, user], index) => `
+    <tr><td>${index + 1}</td><td class="fw7">${escapeHtml(user.nama || '—')}</td><td>${escapeHtml(user.email || '—')}</td>
+      <td>${escapeHtml(user.jawatan || 'Admin')}</td><td><span class="tag ${user.aktif === false ? 'tag-pending' : 'tag-super'}">${user.aktif === false ? 'Tidak aktif' : 'Aktif'}</span></td>
+      <td class="muted">${fmt(user.tarikhDaftar)}</td><td><button class="btn-icon" title="Edit" onclick="editPIC('${escapeHtml(id)}')">✏️</button><button class="btn-icon del" title="Padam" onclick="deleteAdmin('${escapeHtml(id)}')">🗑️</button></td></tr>`).join('')
+    : '<tr><td colspan="7"><div class="empty"><div class="eico">🛡️</div><p>Belum ada akaun admin</p><div class="muted">Daftar akaun admin untuk pengurusan sistem.</div></div></td></tr>';
+}
+
 /* ── ADD/SAVE CLINIC ────────────────────────────────────── */
 window.openAddClinic = () => {
   document.getElementById('cl-nama').value = '';
@@ -1025,8 +1306,6 @@ window.deleteClinic = id => {
   openModal('mo-confirm');
 };
 
-/* ── PIC MANAGEMENT ─────────────────────────────────────── */
-window.openAddPIC = () => {
 /* ── PIC / ADMIN MANAGEMENT (no Firebase Auth — direct DB) ── */
 window.openAddPIC = () => {
   document.getElementById('pic-modal-title').textContent = '👤 Daftar PIC Baharu';
@@ -1150,9 +1429,6 @@ window.deleteAdmin = uid => {
     closeModal('mo-confirm'); toast('🗑️ Rekod Admin dipadam.');
     renderAdminTable();
   };
-  openModal('mo-confirm');
-};
-
   openModal('mo-confirm');
 };
 
