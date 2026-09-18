@@ -603,7 +603,6 @@ tr:hover td { background: rgba(13,115,119,.02); }
         <div class="card-title">📋 Senarai Pesakit <span class="badge" id="ll-count">0</span></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-primary btn-sm" onclick="openAddPatient()">+ Tambah Pesakit</button>
-          <button class="btn btn-ghost btn-sm" onclick="seedDemoPatients()">🧪 10 Data Ujian</button>
           <button class="btn btn-ghost btn-sm" id="btn-csv" onclick="downloadCSV()">⬇️ Muat Turun CSV</button>
         </div>
       </div>
@@ -899,51 +898,17 @@ const dateOffset = days => {
   const d = new Date(); d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 };
-const buildDemoData = () => {
-  const demoClinics = {
-    'demo-klinik-tumpat': { nama: 'Klinik Ujian Tumpat', kawasan: 'Tumpat', tarikhDaftar: dateOffset(-14), demo: true },
-    'demo-klinik-wakaf': { nama: 'Klinik Ujian Wakaf Bharu', kawasan: 'Tumpat', tarikhDaftar: dateOffset(-14), demo: true },
-    'demo-klinik-pasir': { nama: 'Klinik Ujian Pasir Mas', kawasan: 'Pasir Mas', tarikhDaftar: dateOffset(-14), demo: true }
-  };
-  const daysSinceDelivery = [35, 42, 55, 70, 100, 160, 420, 520, 720, 900];
-  const demoPatients = {};
-  daysSinceDelivery.forEach((days, index) => {
-    const n = String(index + 1).padStart(2, '0');
-    const delivery = dateOffset(-days);
-    const patient = {
-      klinikId: Object.keys(demoClinics)[index % 3],
-      nama: `DEMO – Pesakit Ujian ${n}`,
-      ic: `900101-03-${String(1000 + index)}`,
-      tel: `013-555 ${String(1000 + index)}`,
-      tel2: '',
-      alamat: 'Rekod ujian — bukan data klinikal sebenar',
-      tarikhBersalin: delivery,
-      parity: index % 3 === 0 ? '2' : '1',
-      tinggi: 1.5 + (index % 5) * 0.02,
-      berat: 52 + index * 2,
-      htn: index % 4 === 0 ? 'Ya' : 'Tidak',
-      hld: index % 5 === 0 ? 'Ya' : 'Tidak',
-      anemia: index % 3 === 0 ? 'Ya' : 'Tidak',
-      komorbidLain: index % 4 === 1 ? 'Tiada' : '',
-      tarikhDaftar: dateOffset(-days - 10),
-      demo: true
-    };
-    if (index < 5) {
-      patient.ogtt6w = {
-        tarikhUjian: dateOffset(-(days - 42)),
-        fasting: index === 2 ? '6.2' : index === 3 ? '7.4' : '5.1',
-        postprandial: index === 2 ? '8.0' : index === 3 ? '12.1' : '6.8'
-      };
-    }
-    if (index >= 6) {
-      const year = String(2026 + Math.min(index - 5, 4));
-      patient.ujianTahunan = { [year]: { tarikhUjian: dateOffset(-30), jenis: 'HbA1c', nilai: index === 8 ? '6.7' : '5.5' } };
-    }
-    demoPatients[`demo-patient-${n}`] = patient;
-  });
-  return { klinik: demoClinics, users: {}, pesakit: demoPatients };
-};
-const demoData = buildDemoData();
+const buildFallbackData = () => ({
+  klinik: {
+    'kk-pengkalan-kubor': { nama: 'Klinik Kesihatan Pengkalan Kubor', kawasan: 'Tumpat' },
+    'kk-bandar-tumpat': { nama: 'Klinik Kesihatan Bandar Tumpat', kawasan: 'Tumpat' },
+    'kk-bunohan': { nama: 'Klinik Kesihatan Bunohan', kawasan: 'Tumpat' },
+    'kk-pasir-pekan': { nama: 'Klinik Kesihatan Pasir Pekan', kawasan: 'Tumpat' },
+    'kk-sungai-pinang': { nama: 'Klinik Kesihatan Sungai Pinang', kawasan: 'Tumpat' }
+  },
+  users: {}, pesakit: {}
+});
+const fallbackData = buildFallbackData();
 
 const setDataStatus = (mode, detail) => {
   dataRuntime.mode = mode;
@@ -951,13 +916,13 @@ const setDataStatus = (mode, detail) => {
   const label = document.getElementById('data-status-label');
   if (!el || !label) return;
   el.className = `data-status ${mode === 'remote' ? 'connected' : mode}`;
-  label.textContent = detail || (mode === 'remote' ? 'Disambung' : mode === 'demo' ? 'Data ujian' : 'Mod luar talian');
+  label.textContent = detail || (mode === 'remote' ? 'Disambung' : mode === 'demo' ? 'Sambungan diperlukan' : 'Mod luar talian');
   el.title = mode === 'remote' ? 'Firebase disambung · Klik untuk muat semula' : 'Klik untuk cuba sambung semula ke Firebase';
   const notice = document.getElementById('data-notice');
   if (notice) {
     notice.hidden = mode === 'remote';
     notice.innerHTML = mode === 'demo'
-      ? '🧪 <strong>Mod data ujian:</strong> Firebase belum mengembalikan rekod, jadi 10 subjek demo dipaparkan untuk ujian UI. Rekod ini tidak dihantar ke pangkalan data sehingga anda menyimpannya.'
+      ? '⚠️ <strong>Sambungan diperlukan:</strong> Firebase belum mengembalikan rekod. Cuba muat semula apabila sambungan tersedia.'
       : mode === 'offline'
         ? '⚠️ <strong>Mod luar talian:</strong> Firebase tidak dapat dicapai sekarang. Perubahan disimpan pada peranti ini dan akan kekal boleh digunakan sehingga sambungan pulih.'
         : '';
@@ -969,7 +934,7 @@ const localValue = path => {
   const cached = readAt(localCache, path);
   const cachedEmpty = cached && typeof cached === 'object' && Object.keys(cached).length === 0;
   if (cached !== undefined && !((path === 'klinik' || path === 'pesakit') && cachedEmpty)) return cached;
-  if (path === 'klinik' || path === 'pesakit') return readAt(demoData, path);
+  if (path === 'klinik' || path === 'pesakit') return readAt(fallbackData, path);
   return path === 'users' ? {} : null;
 };
 const request = async (path, options = {}) => {
@@ -1197,24 +1162,6 @@ function onDataChange() {
 }
 
 window.refreshData = refreshData;
-window.seedDemoPatients = async () => {
-  const existingDemo = Object.values(patients).filter(p => p && p.demo).length;
-  if (existingDemo >= 10) {
-    onDataChange();
-    updateReminderBadge();
-    toast('🧪 10 data ujian sudah tersedia.');
-    return;
-  }
-  await update(ref(db, 'klinik'), clone(demoData.klinik));
-  await update(ref(db, 'pesakit'), clone(demoData.pesakit));
-  clinics = { ...clinics, ...clone(demoData.klinik) };
-  patients = { ...patients, ...clone(demoData.pesakit) };
-  onDataChange();
-  updateReminderBadge();
-  toast('🧪 10 data ujian ditambah — tandakan DEMO sebelum digunakan.');
-};
-
-
 /* ── SELECTS ────────────────────────────────────────────── */
 function populateKlinikSelects() {
   ['pat-klinik','ll-klinik'].forEach(sid => {
@@ -1520,7 +1467,7 @@ window.savePatient = async () => {
 };
 
 window.deletePatient = id => {
-  document.getElementById('confirm-msg').textContent = `Padam rekod "${patients[id]?.nama}"? Semua data ujian turut dipadam.`;
+  document.getElementById('confirm-msg').textContent = `Padam rekod "${patients[id]?.nama}"? Semua rekod susulan turut dipadam.`;
   document.getElementById('confirm-btn').onclick = async () => {
     await remove(ref(db,`pesakit/${id}`));
     if (currentPID===id) closeDetail();
